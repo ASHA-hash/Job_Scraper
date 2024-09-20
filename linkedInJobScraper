@@ -80,7 +80,7 @@ def linkedIn_login(driver):
             print("Entering email in the first email field...")
             email_field_Path1 = "/html/body/div[1]/main/div[3]/div[1]/form/div[1]/input"  # First email field XPATH
             email_field1 = driver.find_element(By.XPATH, email_field_Path1)
-            email_field1.send_keys("7530078474")
+            email_field1.send_keys(Your_email)
             email_field_found = True
         except Exception as e:
             print(f"First email field failed: {e}")
@@ -90,7 +90,7 @@ def linkedIn_login(driver):
                 print("Entering email in the second email field...")
                 email_field_Path2 = "/html/body/div/main/div[2]/div[1]/form/div[1]/input"  # Second email field XPATH
                 email_field2 = driver.find_element(By.XPATH, email_field_Path2)
-                email_field2.send_keys("7530078474")
+                email_field2.send_keys(Your_email)
             except Exception as e:
                 print(f"Second email field failed: {e}")
 
@@ -103,7 +103,7 @@ def linkedIn_login(driver):
             print("Entering password in the first password field...")
             password_field_Path1 = "/html/body/div/main/div[2]/div[1]/form/div[2]/input"  # First password field XPATH
             password_field1 = driver.find_element(By.XPATH, password_field_Path1)
-            password_field1.send_keys("gat h6#@!@!F")
+            password_field1.send_keys(Your_Password)
             password_field_found = True
         except Exception as e:
             print(f"First password field failed: {e}")
@@ -114,7 +114,7 @@ def linkedIn_login(driver):
                 # "/html/body/div[1]/main/div[3]/div[1]/form/div[2]/input"
                 password_field_Path2 = "/html/body/div[1]/main/div[3]/div[1]/form/div[2]/input"  # Second password field XPATH
                 password_field2 = driver.find_element(By.XPATH, password_field_Path2)
-                password_field2.send_keys("gat h6#@!@!F")
+                password_field2.send_keys(Your_Password)
             except Exception as e:
                 print(f"Second password field failed: {e}")
 
