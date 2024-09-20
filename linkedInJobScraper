@@ -1,0 +1,969 @@
+from selenium.webdriver import ActionChains
+from selenium.webdriver.support import expected_conditions as EC
+import json
+from selenium import webdriver
+from selenium.common import NoSuchElementException
+from selenium.webdriver.common.keys import Keys
+from selenium.webdriver.common.by import By
+import time
+import openpyxl
+import datetime
+
+from selenium.webdriver.support.wait import WebDriverWait
+
+# Record the start time
+start_time = time.time()
+# File name where the number will be stored
+file_name = ".venv/counter.txt"
+
+feed_url = "https://www.linkedin.com/feed/"
+
+# Try to open the file and read the current number
+try:
+    with open(file_name, "r") as file:
+        number = int(file.read())
+except FileNotFoundError:
+    # If the file does not exist, start with 0
+    number = 0
+
+# Increment the number
+number += 1
+
+# Write the new number back to the file
+with open(file_name, "w") as file:
+    file.write(str(number))
+
+# Print the updated number
+print(f"Current number: {number}")
+
+
+# Function to check if a string contains any numbers
+def contains_number(s):
+    return any(char.isdigit() for char in s)
+
+
+# Initialize the WebDriver
+driver = webdriver.Chrome()
+
+# Initialize a new workbook
+workbook = openpyxl.Workbook()
+
+
+def linkedIn_login(driver):
+    try:
+        print("Navigating to LinkedIn login page...")
+        driver.get("https://www.linkedin.com/")
+        time.sleep(5)
+
+        # Try two Sign In buttons
+        signUpButton_Path_1 = "/html/body/nav/div/a[2]"  # First Sign In button XPATH
+        signUpButton_Path_2 = "/html/body/nav/div/a[1]"  # Second Sign In button XPATH
+        try:
+            print("Clicking on the first Sign In button...")
+
+            signUpButton_1 = driver.find_element(By.XPATH, signUpButton_Path_1)
+
+            if 'Sign in' in signUpButton_1.text:
+                signUpButton_1.click()
+            else:
+                print("Clicking on the second Sign In button...")
+                signUpButton_2 = driver.find_element(By.XPATH, signUpButton_Path_2)
+                signUpButton_2.click()
+        except:
+            print("Couldn't find both XPATHs for Sign In buttons.")
+        time.sleep(5)
+
+        # Try two email fields (ensure they aren't in the same field)
+        email_field_found = False
+
+        try:
+            print("Entering email in the first email field...")
+            email_field_Path1 = "/html/body/div[1]/main/div[3]/div[1]/form/div[1]/input"  # First email field XPATH
+            email_field1 = driver.find_element(By.XPATH, email_field_Path1)
+            email_field1.send_keys("7530078474")
+            email_field_found = True
+        except Exception as e:
+            print(f"First email field failed: {e}")
+
+        if not email_field_found:
+            try:
+                print("Entering email in the second email field...")
+                email_field_Path2 = "/html/body/div/main/div[2]/div[1]/form/div[1]/input"  # Second email field XPATH
+                email_field2 = driver.find_element(By.XPATH, email_field_Path2)
+                email_field2.send_keys("7530078474")
+            except Exception as e:
+                print(f"Second email field failed: {e}")
+
+        time.sleep(5)
+
+        # Try two password fields (ensure they aren't in the same field)
+        password_field_found = False
+
+        try:
+            print("Entering password in the first password field...")
+            password_field_Path1 = "/html/body/div/main/div[2]/div[1]/form/div[2]/input"  # First password field XPATH
+            password_field1 = driver.find_element(By.XPATH, password_field_Path1)
+            password_field1.send_keys("gat h6#@!@!F")
+            password_field_found = True
+        except Exception as e:
+            print(f"First password field failed: {e}")
+
+        if not password_field_found:
+            try:
+                print("Entering password in the second password field...")
+                # "/html/body/div[1]/main/div[3]/div[1]/form/div[2]/input"
+                password_field_Path2 = "/html/body/div[1]/main/div[3]/div[1]/form/div[2]/input"  # Second password field XPATH
+                password_field2 = driver.find_element(By.XPATH, password_field_Path2)
+                password_field2.send_keys("gat h6#@!@!F")
+            except Exception as e:
+                print(f"Second password field failed: {e}")
+
+        time.sleep(5)
+
+        # Try two Sign In buttons to submit (ensure correct submission)
+        signIn_button_clicked = False
+        try:
+            print("Clicking the first Sign In button to submit...")
+            signInButton_Path1 = "/html/body/div[1]/main/div[3]/div[1]/form/div[3]/button"  # First submit button XPATH
+            signInButton1 = driver.find_element(By.XPATH, signInButton_Path1)
+            signInButton1.click()
+            signIn_button_clicked = True
+        except Exception as e:
+            print(f"First Sign In button to submit failed: {e}")
+
+        if not signIn_button_clicked:
+            try:
+                print("Clicking the second Sign In button to submit...")
+                signInButton_Path2 = "/html/body/div/main/div[2]/div[1]/form/div[3]/button"  # Second submit button XPATH
+                signInButton2 = driver.find_element(By.XPATH, signInButton_Path2)
+                signInButton2.click()
+            except Exception as e:
+                print(f"Second Sign In button to submit failed: {e}")
+
+        print("Logged in successfully.")
+        time.sleep(20)
+        #
+    except Exception as e:
+        print(f"Error during LinkedIn login: {e}")
+
+
+# def job_scraping(driver, job_title_to_search, workbook, field):
+#     field = field
+#
+#     locations = [
+#         "United States",
+#         "United Kingdom",
+#         "Canada",
+#         "Australia",
+#         "India",
+#         "Bangladesh",
+#         "United Arab Emirates",
+#         "Singapore",
+#         "Brazil",
+#         "Germany",
+#         "Netherlands"
+#     ]
+#
+#     total_pages = 100  # Specify the total number of pages to scrape
+#     # location = "India"
+#     time.sleep(2)
+#
+#     # /html/body/div[5]/header/div/div/div/div[2]/div[2]/div/div/input[1] - location
+#
+#     print("Searching for the job title...")
+#
+#     # Try first search field
+#     try:
+#         print("Trying the first search field...")
+#
+#         search_job_title_path_1 = "/html/body/div[5]/header/div/div/div/div[1]/input"  # First search field XPATH
+#         search_job_title_1 = driver.find_element(By.XPATH, search_job_title_path_1)
+#         search_job_title_1.send_keys(job_title_to_search)
+#         search_job_title_1.send_keys(Keys.RETURN)
+#     except Exception as e:
+#
+#         print(f"First search field failed: {e}")
+#         time.sleep(2)
+#
+#         # Try second search field if the first one fails
+#         print("Trying the second search field...")
+#         search_job_title_path_2 = "/html/body/div[5]/header/div/div/div/button"  # Second search field XPATH
+#         search_job_title_2 = driver.find_element(By.XPATH, search_job_title_path_2)
+#         search_job_title_2.click()  # Assuming it's a button that opens the search bar
+#
+#         print("Clicking on the Jobs tab...")
+#
+#     # Try the first Jobs tab button
+#     try:
+#         print("Trying the first Jobs tab button...")
+#         job_button_path_1 = "/html/body/div[5]/div[3]/div[2]/section/div/nav/div/ul/li[1]/button"  # First Jobs tab XPATH
+#         job_button_1 = driver.find_element(By.XPATH, job_button_path_1)
+#         job_button_1.click()
+#         time.sleep(30)
+#     except Exception as e:
+#         time.sleep(5)
+#         pass
+#
+#     # Create a new sheet in the workbook with the job title
+#     sheet = workbook.create_sheet(title=job_title_to_search)
+#
+#     # Add headers to the sheet
+#     sheet.append([
+#         "Job Title",
+#         "Company Name",
+#         "Location",
+#         "Apply Link",
+#         "Job Type",  # Add Job Type header
+#         "Experience Level",  # Add Experience Level header
+#         "On-site/Remote",  # Add On-site/Remote header
+#         "salary",
+#         "Job Details"  # Add Job Details header
+#     ])
+#     # Initialize job counter
+#     job_counter = 0
+#     max_jobs = 60
+#     scraping_complete = False
+#
+#     for l in locations:
+#         print(l)
+#         job_counter = 0
+#
+#
+#
+#
+#         try:
+#             location_found = False
+#             location_path_1 = "/html/body/div[6]/header/div/div/div/div[2]/div[2]/div/div[2]/input[1]"  # First location field XPATH
+#             location_path_2 = "/html/body/div[5]/header/div/div/div/div[2]/div[2]/div/div/input[1]"  # Second location field XPATH
+#
+#             try:
+#                 print("Trying the first location input field...")
+#                 location_1 = driver.find_element(By.XPATH, location_path_1)
+#                 location_1.clear()
+#                 location_1.send_keys(l)
+#                 location_1.send_keys(Keys.RETURN)
+#                 time.sleep(8)
+#
+#                 location_found = True
+#             except Exception as e:
+#
+#                 print(f"First location input field failed: {e}")
+#
+#             if not location_found:
+#                 print("Trying the second location input field...")
+#                 location_2 = driver.find_element(By.XPATH, location_path_2)
+#                 location_2.clear()
+#                 location_2.send_keys(l)
+#                 location_2.send_keys(Keys.RETURN)
+#                 print("it is working")
+#                 time.sleep(8)
+#
+#
+#         except:
+#
+#             print("Error")
+#
+#         for page in range(1, total_pages + 1):
+#             print(("I am in "))
+#
+#             if scraping_complete:
+#                 break
+#
+#             print(f"Scraping page {page}...")
+#             time.sleep(5)  # Allow the page to load
+#
+#             try:
+#
+#                 # Get job postings
+#                 jobs = driver.find_elements(By.CLASS_NAME, 'jobs-search-results__list-item')
+#                 # no_job_element = driver.find_element(By.XPATH, "//h1[@class='t-24 t-black t-normal text-align-center' and contains(text(), 'No matching jobs found.')]")
+#                 if not jobs:
+#                     # Find the element with the specific text
+#
+#                     print("No jobs found on this page.")
+#                     scraping_complete = True
+#                     break
+#
+#                 for i, job in enumerate(jobs):
+#                     # Check if the job limit has been reached
+#                     if job_counter >= max_jobs:
+#                         scraping_complete = True
+#                         break
+#
+#                     try:
+#                         # Scroll down to each job posting
+#                         driver.execute_script("arguments[0].scrollIntoView();", job)
+#                         time.sleep(2)
+#
+#                         # Job Title
+#                         job_title = job.find_element(By.CSS_SELECTOR, ".job-card-list__title > span > strong").text
+#
+#                         # Locate the job title element
+#                         job_title_element = job.find_element(By.CSS_SELECTOR, ".job-card-list__title")
+#
+#                         # Get the href attribute (which contains the job link)
+#                         job_link = job_title_element.get_attribute("href")
+#
+#                         # Company Name
+#                         company_name = job.find_element(By.CSS_SELECTOR,
+#                                                         ".job-card-container__primary-description").text
+#
+#                         # Location
+#                         location = job.find_element(By.CSS_SELECTOR, ".job-card-container__metadata-item").text
+#
+#                         # location_path.click()
+#                         job.click()
+#
+#                         try:
+#                             # Attempt to extract information assuming there are 4 <span> elements
+#                             span_elements = driver.find_elements(By.CSS_SELECTOR,
+#                                                                  'ul > li:nth-of-type(1) > span > span')
+#
+#                             if len(span_elements) == 4:
+#                                 salary = span_elements[0].text
+#                                 onsite_or_remote = span_elements[1].text
+#                                 job_type = span_elements[2].text
+#                                 experience_level = span_elements[3].text
+#                             elif len(span_elements) == 3:
+#                                 onsite_or_remote = span_elements[0].text
+#                                 job_type = span_elements[1].text
+#                                 experience_level = span_elements[2].text
+#                                 salary = "Salary information not available"
+#                             elif len(span_elements) == 2:
+#                                 job_type = span_elements[0].text
+#                                 experience_level = span_elements[1].text
+#                                 onsite_or_remote = "Not found"
+#                                 salary = "Salary information not available"
+#                             else:
+#                                 raise NoSuchElementException
+#
+#                         except NoSuchElementException:
+#                             try:
+#                                 # Attempt to extract information assuming there are 4 <span> elements with different selectors
+#                                 span_elements = driver.find_elements(By.CSS_SELECTOR,
+#                                                                      'ul > li:nth-of-type(1) > span > span')
+#
+#                                 if len(span_elements) == 4:
+#                                     salary = driver.find_element(By.CSS_SELECTOR,
+#                                                                  'ul > li:nth-of-type(1) > span > span:nth-of-type(1)').text
+#                                     onsite_or_remote = driver.find_element(By.CSS_SELECTOR,
+#                                                                            'ul > li:nth-of-type(1) > span > span:nth-of-type(2)').text
+#                                     job_type = driver.find_element(By.CSS_SELECTOR,
+#                                                                    'ul > li:nth-of-type(1) > span > span:nth-of-type(3)').text
+#                                     experience_level = driver.find_element(By.CSS_SELECTOR,
+#                                                                            'ul > li:nth-of-type(1) > span > span:nth-of-type(4)').text
+#
+#                                 elif len(span_elements) == 3:
+#                                     onsite_or_remote = driver.find_element(By.CSS_SELECTOR,
+#                                                                            'ul > li:nth-of-type(1) > span > span:nth-of-type(1)').text
+#                                     job_type = driver.find_element(By.CSS_SELECTOR,
+#                                                                    'ul > li:nth-of-type(1) > span > span:nth-of-type(2)').text
+#                                     experience_level = driver.find_element(By.CSS_SELECTOR,
+#                                                                            'ul > li:nth-of-type(1) > span > span:nth-of-type(3)').text
+#                                     salary = "Salary information not available"
+#                                 elif len(span_elements) == 2:
+#                                     job_type = driver.find_element(By.CSS_SELECTOR,
+#                                                                    'ul > li:nth-of-type(1) > span > span:nth-of-type(1)').text
+#                                     experience_level = driver.find_element(By.CSS_SELECTOR,
+#                                                                            'ul > li:nth-of-type(1) > span > span:nth-of-type(2)').text
+#                                     onsite_or_remote = "Not found"
+#                                     salary = "Salary information not available"
+#                                 else:
+#                                     raise NoSuchElementException
+#                             except NoSuchElementException:
+#                                 # If all attempts fail, assign default values
+#                                 job_type = "No job type"
+#                                 experience_level = "No experience level"
+#                                 onsite_or_remote = "Not mentioned"
+#                                 salary = "Salary information not available"
+#
+#                         # Try to locate the job details element and scroll into view
+#                         try:
+#                             # Locate the element
+#                             job_details_element = driver.find_element(By.CSS_SELECTOR,
+#                                                                       'div.jobs-box__html-content.jobs-description-content__text')
+#
+#                             # Scroll into view
+#                             actions = ActionChains(driver)
+#                             actions.move_to_element(job_details_element).perform()
+#
+#                             # Get and print the job details text
+#                             job_details = job_details_element.text
+#                             print(job_details)
+#
+#                         except Exception as e:
+#                             # If any exception occurs, print an empty string
+#                             job_details = "N/A"
+#                             print(job_details)
+#
+#                         # Save the job details in the sheet
+#                         sheet.append([
+#                             job_title,
+#                             company_name,
+#                             location,
+#                             job_link,
+#                             job_type,  # Add job_type to the sheet
+#                             experience_level,  # Add experience_level to the sheet
+#                             onsite_or_remote,  # Add onsite_or_remote to the sheet
+#                             salary,
+#                             job_details  # Add job_details to the sheet
+#
+#                         ])
+#
+#                         # Print the scraped data for verification
+#                         print(f"Job Title: {job_title}")
+#                         print(f"Company Name: {company_name}")
+#                         print(f"Location: {location}")
+#                         print(f"Apply Link: {job_link}")
+#                         print(f"Job Type: {job_type}")  # Print the job_type for verification
+#                         print(f"Experience Level: {experience_level}")  # Print the experience level
+#                         print(f"On-site/Remote: {onsite_or_remote}")  # Print on-site/remote status
+#                         print(f"Job Details: {job_details}")  # Print the job details
+#                         # Print the details
+#                         print(f"Salary: {salary if salary else 'Salary information not available'}")
+#
+#                         # Save the workbook after processing all jobs
+#                         workbook.save(f"{field}_{l}.xlsx")
+#                         print(f"The job counter is {job_counter}")
+#                         # Increment job_counter after processing the job
+#                         job_counter += 1
+#                     except Exception as e:
+#                         print(f"Error processing job {i} {e}")
+#                         continue
+#
+#                 # Pagination handling
+#                 try:
+#                     page_number = page
+#                     pagination_selector = f'li[data-test-pagination-page-btn] button[aria-label="Page {page_number}"]'
+#                     pagination_button = driver.find_element(By.CSS_SELECTOR, pagination_selector)
+#                     pagination_button.click()
+#                     time.sleep(15)
+#                 except NoSuchElementException:
+#                     try:
+#                         pagination_selector = f'li.artdeco-pagination__indicator button[aria-label="Page {page_number}"]'
+#                         pagination_button = driver.find_element(By.CSS_SELECTOR, pagination_selector)
+#                         pagination_button.click()
+#                         time.sleep(15)
+#                     except Exception as e:
+#                         print(f"Pagination error on page {page}")
+#                         break  # Stop the loop if pagination fails
+#
+#             except Exception as e:
+#                 print(f"Error on page {page} {e}")
+#                 continue
+
+def job_scraping(driver, job_title_to_search, workbook, field):
+    field = field
+
+    # current = driver.current_url
+    # if current == feed_url:
+    #     pass
+    # else:
+    #     driver.get(feed_url)
+
+    all_locations = [
+        "United States", "United Kingdom", "Canada", "Australia", "India",
+        "Bangladesh", "United Arab Emirates", "Singapore", "Brazil", "Germany", "Netherlands"
+    ]
+
+    # If it's a specific job title (e.g., "Software Engineer"), prioritize India first and then loop through the remaining
+    if job_title_to_search == "Railway Officer":
+        # Start with India, then go through the rest except for the ones you want to skip (e.g., "US", "UK")
+        locations = [loc for loc in all_locations if
+                     loc not in ["United States"]]
+    else:
+        # Use all locations
+        locations = all_locations
+
+    total_pages = 60  # Specify the total number of pages to scrape
+    max_jobs = 520  # Maximum number of jobs to scrape across all locations
+    max_jobs_per_location = 60  # Maximum number of jobs to scrape per location
+    total_job_count = 0  # Track total jobs scraped across all locations
+
+    time.sleep(5)
+
+    # # Search for the job title
+    # search_job_title_path = "/html/body/div[5]/header/div/div/div/div[1]/input"
+    # search_job_title = driver.find_element(By.XPATH, search_job_title_path)
+    # search_job_title.send_keys(job_title_to_search)
+    # search_job_title.send_keys(Keys.RETURN)
+    # time.sleep(10)
+
+    # try:
+    #     # Click on the Jobs tab
+    #     job_button_path = "/html/body/div[5]/div[3]/div[2]/section/div/nav/div/ul/li[1]/button"
+    #     job_button = driver.find_element(By.XPATH, job_button_path)
+    #     job_button.click()
+    #     time.sleep(10)
+    # except:
+    #     try:
+    #         # Wait until the "Jobs" button is clickable
+    #         jobs_button = WebDriverWait(driver, 10).until(
+    #             EC.element_to_be_clickable((By.XPATH, "//button[contains(text(), 'Jobs')]"))
+    #         )
+    #         # Click the "Jobs" button
+    #         jobs_button.click()
+    #         print("Successfully clicked the 'Jobs' button.")
+    #     except Exception as e:
+    #         print(f"An error occurred: {e}")
+
+    # Create a new sheet in the workbook with the job title
+    sheet = workbook.create_sheet(title=job_title_to_search)
+    sheet.append(["Job Title", "Company Name", "Location", "Apply Link"])
+
+    # "/html/body/div[5]/header/div/div/div/div[2]/div[1]/div/div/input[1]"
+    search_field_title_path = "/html/body/div[5]/header/div/div/div/div[2]/div[1]/div/div/input[1]"
+    search_field_title = driver.find_element(By.XPATH, search_field_title_path)
+    search_field_title.clear()
+    time.sleep(1.5)
+    search_field_title.send_keys(job_title_to_search)
+    # search_field_title.send_keys(Keys.RETURN)
+    time.sleep(10)
+
+    for l in locations:
+        if total_job_count >= max_jobs:
+            print("Reached the maximum number of jobs to scrape.")
+            break  # Stop if we've reached the maximum number of jobs across all locations
+
+
+
+        location_path = "/html/body/div[5]/header/div/div/div/div[2]/div[2]/div/div/input[1]"
+        location_input = driver.find_element(By.XPATH, location_path)
+        location_input.clear()
+        location_input.send_keys(l)
+        location_input.send_keys(Keys.RETURN)
+
+        try:
+            location_input.send_keys(Keys.RETURN)
+        except:
+            search_path = "/html/body/div[5]/header/div/div/div/div[2]/button[1]"
+            search_button = driver.find_element(By.XPATH, search_path)
+            search_button.click()
+            time.sleep(5)
+
+        jobs_scraped_in_location = 0  # Track jobs scraped for the current location
+
+        for page in range(1, total_pages + 1):
+            if total_job_count >= max_jobs or jobs_scraped_in_location >= max_jobs_per_location:
+                print(f"Finished scraping location {l} with {jobs_scraped_in_location} jobs.")
+                break  # Stop if the limit is reached for either total jobs or per location
+
+            print(f"Scraping page {page} for location {l}...")
+            time.sleep(5)  # Allow the page to load
+
+            try:
+                # Get job postings
+                jobs = driver.find_elements(By.CLASS_NAME, 'jobs-search-results__list-item')
+                if not jobs:
+                    print(f"No jobs found on this page for location {l}.")
+                    continue
+
+                for job in jobs:
+                    if total_job_count >= max_jobs or jobs_scraped_in_location >= max_jobs_per_location:
+                        print(f"Reached job limit for location {l} or total jobs.")
+                        break  # Stop if either limit is reached
+
+                    try:
+                        # Scroll down to each job posting
+                        driver.execute_script("arguments[0].scrollIntoView();", job)
+                        time.sleep(2)
+
+                        # Job Title
+                        job_title = job.find_element(By.CSS_SELECTOR, ".job-card-list__title > span > strong").text
+
+                        # Locate the job title element
+                        job_title_element = job.find_element(By.CSS_SELECTOR, ".job-card-list__title")
+
+                        # Get the href attribute (which contains the job link)
+                        job_link = job_title_element.get_attribute("href")
+
+                        # Company Name
+                        company_name = job.find_element(By.CSS_SELECTOR,
+                                                        ".job-card-container__primary-description").text
+
+                        # Location
+                        location = job.find_element(By.CSS_SELECTOR, ".job-card-container__metadata-item").text
+
+                        # location_path.click()
+                        job.click()
+
+                        try:
+                            # Attempt to extract information assuming there are 4 <span> elements
+                            span_elements = driver.find_elements(By.CSS_SELECTOR,
+                                                                 'ul > li:nth-of-type(1) > span > span')
+
+                            if len(span_elements) == 4:
+                                salary = span_elements[0].text
+                                onsite_or_remote = span_elements[1].text
+                                job_type = span_elements[2].text
+                                experience_level = span_elements[3].text
+                            elif len(span_elements) == 3:
+                                onsite_or_remote = span_elements[0].text
+                                job_type = span_elements[1].text
+                                experience_level = span_elements[2].text
+                                salary = "Salary information not available"
+                            elif len(span_elements) == 2:
+                                job_type = span_elements[0].text
+                                experience_level = span_elements[1].text
+                                onsite_or_remote = "Not found"
+                                salary = "Salary information not available"
+                            else:
+                                raise NoSuchElementException
+
+                        except NoSuchElementException:
+                            try:
+                                # Attempt to extract information assuming there are 4 <span> elements with different selectors
+                                span_elements = driver.find_elements(By.CSS_SELECTOR,
+                                                                     'ul > li:nth-of-type(1) > span > span')
+
+                                if len(span_elements) == 4:
+                                    salary = driver.find_element(By.CSS_SELECTOR,
+                                                                 'ul > li:nth-of-type(1) > span > span:nth-of-type(1)').text
+                                    onsite_or_remote = driver.find_element(By.CSS_SELECTOR,
+                                                                           'ul > li:nth-of-type(1) > span > span:nth-of-type(2)').text
+                                    job_type = driver.find_element(By.CSS_SELECTOR,
+                                                                   'ul > li:nth-of-type(1) > span > span:nth-of-type(3)').text
+                                    experience_level = driver.find_element(By.CSS_SELECTOR,
+                                                                           'ul > li:nth-of-type(1) > span > span:nth-of-type(4)').text
+
+                                elif len(span_elements) == 3:
+                                    onsite_or_remote = driver.find_element(By.CSS_SELECTOR,
+                                                                           'ul > li:nth-of-type(1) > span > span:nth-of-type(1)').text
+                                    job_type = driver.find_element(By.CSS_SELECTOR,
+                                                                   'ul > li:nth-of-type(1) > span > span:nth-of-type(2)').text
+                                    experience_level = driver.find_element(By.CSS_SELECTOR,
+                                                                           'ul > li:nth-of-type(1) > span > span:nth-of-type(3)').text
+                                    salary = "Salary information not available"
+                                elif len(span_elements) == 2:
+                                    job_type = driver.find_element(By.CSS_SELECTOR,
+                                                                   'ul > li:nth-of-type(1) > span > span:nth-of-type(1)').text
+                                    experience_level = driver.find_element(By.CSS_SELECTOR,
+                                                                           'ul > li:nth-of-type(1) > span > span:nth-of-type(2)').text
+                                    onsite_or_remote = "Not found"
+                                    salary = "Salary information not available"
+                                else:
+                                    raise NoSuchElementException
+                            except NoSuchElementException:
+                                # If all attempts fail, assign default values
+                                job_type = "No job type"
+                                experience_level = "No experience level"
+                                onsite_or_remote = "Not mentioned"
+                                salary = "Salary information not available"
+
+                        # Try to locate the job details element and scroll into view
+                        try:
+                            # Locate the element
+                            job_details_element = driver.find_element(By.CSS_SELECTOR,
+                                                                      'div.jobs-box__html-content.jobs-description-content__text')
+
+                            # Scroll into view
+                            actions = ActionChains(driver)
+                            actions.move_to_element(job_details_element).perform()
+
+                            # Get and print the job details text
+                            job_details = job_details_element.text
+                            print(job_details)
+
+                        except Exception as e:
+                            # If any exception occurs, print an empty string
+                            job_details = "N/A"
+                            print(job_details)
+
+                        # Save the job details in the sheet
+                        sheet.append([
+                            job_title,
+                            company_name,
+                            location,
+                            job_link,
+                            job_type,  # Add job_type to the sheet
+                            experience_level,  # Add experience_level to the sheet
+                            onsite_or_remote,  # Add onsite_or_remote to the sheet
+                            salary,
+                            job_details  # Add job_details to the sheet
+
+                        ])
+
+                        # Print the scraped data for verification
+                        print(f"Job Title: {job_title}")
+                        print(f"Company Name: {company_name}")
+                        print(f"Location: {location}")
+                        print(f"Apply Link: {job_link}")
+                        print(f"Job Type: {job_type}")  # Print the job_type for verification
+                        print(f"Experience Level: {experience_level}")  # Print the experience level
+                        print(f"On-site/Remote: {onsite_or_remote}")  # Print on-site/remote status
+                        print(f"Job Details: {job_details}")  # Print the job details
+                        # Print the details
+                        print(f"Salary: {salary if salary else 'Salary information not available'}")
+
+                        # Save the workbook after processing all jobs
+                        workbook.save(f"{field}.xlsx")
+
+                        # Update counters
+                        total_job_count += 1
+                        jobs_scraped_in_location += 1
+
+                        if total_job_count >= max_jobs:
+                            print("Reached the maximum number of jobs to scrape.")
+                            break  # Stop scraping if the total job limit is reached
+
+                    except Exception as e:
+                        print(f"Error processing job in {l}. Error: {e}")
+                        continue
+
+                # Pagination handling
+                try:
+                    page_number = page
+                    pagination_selector = f'li[data-test-pagination-page-btn] button[aria-label="Page {page_number}"]'
+                    pagination_button = driver.find_element(By.CSS_SELECTOR, pagination_selector)
+                    pagination_button.click()
+                    time.sleep(5)
+                except NoSuchElementException:
+                    try:
+                        pagination_selector = f'li.artdeco-pagination__indicator button[aria-label="Page {page_number}"]'
+                        pagination_button = driver.find_element(By.CSS_SELECTOR, pagination_selector)
+                        pagination_button.click()
+                        time.sleep(5)
+                    except Exception as e:
+                        print(f"Pagination error on page {page}. Error: {e}")
+                        break  # Stop the loop if pagination fails
+
+            except Exception as e:
+
+                print(f"Error on page {page} for location {l}. Error: {e}")
+                continue
+
+
+# Call the LinkedIn login function
+linkedIn_login(driver)
+
+
+# Aviation & Aerospace
+aviation_jobs = [
+
+    "Aircraft Maintenance Engineer",
+    "Aerospace Technician"
+]
+
+
+# # Loop through each job title in the job list and scrape the jobs
+freelance_jobs = [
+    "Freelance Writer",
+    "Freelance Graphic Designer",
+    "Virtual Assistant",
+    "Independent Consultant",
+    "Content Creator",
+    "Photographer",
+    "Videographer"
+]
+# Government Services & Public Sector
+government_jobs = [
+    # "IAS Officer",
+    # "IPS Officer",
+    # "IFS Officer",
+    # "Government Clerk",
+    "Railway Officer",
+    "Defense Personnel",
+    "Public Sector Bank Officer",
+    "Scientist"
+]
+driver.get(feed_url)
+time.sleep(5)
+# Search for the job title
+search_job_title_path = "/html/body/div[5]/header/div/div/div/div[1]/input"
+search_job_title = driver.find_element(By.XPATH, search_job_title_path)
+search_job_title.send_keys("developer")
+search_job_title.send_keys(Keys.RETURN)
+time.sleep(10)
+try:
+    # Click on the Jobs tab
+    job_button_path = "/html/body/div[5]/div[3]/div[2]/section/div/nav/div/ul/li[1]/button"
+    job_button = driver.find_element(By.XPATH, job_button_path)
+    job_button.click()
+    time.sleep(10)
+except:
+    try:
+        # Wait until the "Jobs" button is clickable
+        jobs_button = WebDriverWait(driver, 10).until(
+            EC.element_to_be_clickable((By.XPATH, "//button[contains(text(), 'Jobs')]"))
+        )
+        # Click the "Jobs" button
+        jobs_button.click()
+        print("Successfully clicked the 'Jobs' button.")
+    except Exception as e:
+        print(f"An error occurred: {e}")
+
+
+
+for job_title in government_jobs:
+    field = "government_jobs"
+
+    job_scraping(driver, job_title, workbook, field)
+# Loop through each job title in the job list and scrape the jobs
+# for job_title in it_jobs:
+#     field = "it_jobs"
+#     job_scraping(driver, job_title, workbook, field)
+#
+# time.sleep(10)
+#
+# # Loop through each job title in the job list and scrape the jobs
+# for job_title in healthcare_jobs:
+#     field = "healthcare_jobs"
+#     job_scraping(driver, job_title, workbook, field)
+#
+#
+# time.sleep(10)
+#
+# # Loop through each job title in the job list and scrape the jobs
+# for job_title in engineering_jobs:
+#     field = "engineering_jobs"
+#     job_scraping(driver, job_title, workbook, field)
+#
+#
+# time.sleep(10)
+#
+# # Loop through each job title in the job list and scrape the jobs
+# for job_title in finance_jobs:
+#     field = "finance_jobs"
+#     job_scraping(driver, job_title, workbook, field)
+#
+#
+# time.sleep(10)
+#
+# # Loop through each job title in the job list and scrape the jobs
+# for job_title in business_jobs:
+#     field = "business_jobs"
+#     job_scraping(driver, job_title, workbook, field)
+#
+#
+# time.sleep(10)
+
+# Loop through each job title in the job list and scrape the jobs
+# for job_title in education_jobs:
+#     field = "education_jobs"
+#
+#     job_scraping(driver, job_title, workbook, field)
+#
+#
+# time.sleep(10)
+
+# # Loop through each job title in the job list and scrape the jobs
+# for job_title in law_jobs:
+#     field = "law_jobs"
+#
+#     job_scraping(driver, job_title, workbook, field)
+#
+#
+# time.sleep(10)
+#
+# # Loop through each job title in the job list and scrape the jobs
+# for job_title in media_jobs:
+#     field = "media_jobs"
+#
+#     job_scraping(driver, job_title, workbook, field)
+#
+#
+# time.sleep(10)
+#
+# # Loop through each job title in the job list and scrape the jobs
+# for job_title in creative_jobs:
+#     field = "creative_jobs"
+#
+#     job_scraping(driver, job_title, workbook, field)
+#
+#
+# time.sleep(10)
+#
+# # Loop through each job title in the job list and scrape the jobs
+# for job_title in hospitality_jobs:
+#     field = "hospitality_jobs"
+#
+#     job_scraping(driver, job_title, workbook, field)
+#
+#
+# time.sleep(10)
+#
+# # Loop through each job title in the job list and scrape the jobs
+# for job_title in government_jobs:
+#     field = "government_jobs"
+#
+#     job_scraping(driver, job_title, workbook, field)
+#
+#
+# time.sleep(10)
+#
+# # Loop through each job title in the job list and scrape the jobs
+# for job_title in agriculture_jobs:
+#     field = "agriculture_jobs"
+#
+#     job_scraping(driver, job_title, workbook, field)
+#
+#
+# time.sleep(10)
+#
+# # Loop through each job title in the job list and scrape the jobs
+# for job_title in social_services_jobs:
+#     field = "social_services_jobs"
+#
+#     job_scraping(driver, job_title, workbook, field)
+#
+#
+# time.sleep(10)
+#
+# # Loop through each job title in the job list and scrape the jobs
+# for job_title in retail_jobs:
+#     field = "retail_jobs"
+#
+#     job_scraping(driver, job_title, workbook, field)
+#
+# time.sleep(10)
+#
+# # Loop through each job title in the job list and scrape the jobs
+# for job_title in entertainment_jobs:
+#     field = "entertainment_jobs"
+#
+#     job_scraping(driver, job_title, workbook, field)
+#
+#
+# time.sleep(10)
+#
+# # Loop through each job title in the job list and scrape the jobs
+
+#
+# # Loop through each job title in the job list and scrape the jobs
+# for job_title in real_estate_jobs:
+#     field = "real_estate_jobs"
+#
+#     job_scraping(driver, job_title, workbook, field)
+#
+#
+# time.sleep(10)
+#
+# for job_title in telecom_jobs:
+#     field = "telecom_jobs"
+#
+#     job_scraping(driver, job_title, workbook, field)
+#
+#
+# time.sleep(10)
+#
+# # Loop through each job title in the job list and scrape the jobs
+# for job_title in energy_jobs:
+#     field = "energy_jobs"
+#
+#     job_scraping(driver, job_title, workbook, field)
+#
+#
+# time.sleep(10)
+#
+
+# Close the browser
+driver.quit()
+
+# Record the end time
+end_time = time.time()
+
+# Calculate the run time
+run_time = end_time - start_time
+
+# Print the run time in a human-readable format
+print(f"Script runtime: {time.strftime('%H:%M:%S', time.gmtime(run_time))}")
