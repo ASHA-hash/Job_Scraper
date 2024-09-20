@@ -1,0 +1,2099 @@
+from selenium import webdriver
+from selenium.webdriver.common.by import By
+from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support import expected_conditions as EC
+import random
+import time
+from collections import defaultdict
+
+
+from threading import Thread
+import time
+
+# Function to continuously check and close the popup
+def check_and_close_popup():
+    while True:
+        try:
+            # Check if the popup is present
+            popup = WebDriverWait(driver, 5).until(
+                EC.presence_of_element_located((By.ID, 'mosaic-desktopserpjapopup'))
+            )
+
+            # If popup is found, locate and click the close button
+            close_button = driver.find_element(By.CSS_SELECTOR, 'button[aria-label="close"]')
+            close_button.click()
+            print("Popup closed successfully!")
+
+        except Exception:
+            # No popup detected, continue
+            pass
+
+        # Sleep for a short while before checking again (adjust as needed)
+        time.sleep(2)
+
+
+# Start a separate thread to run the popup checking function in the background
+popup_thread = Thread(target=check_and_close_popup)
+popup_thread.daemon = True
+popup_thread.start()
+from selenium.webdriver.common.action_chains import ActionChains
+
+import json
+from selenium import webdriver
+from selenium.common import NoSuchElementException
+from selenium.webdriver.common.keys import Keys
+from selenium.webdriver.common.by import By
+import time
+import openpyxl
+import datetime
+
+from selenium.webdriver.support.wait import WebDriverWait
+
+# Record the start time
+start_time = time.time()
+# File name where the number will be stored
+file_name = ".venv/counter.txt"
+
+url = "https://in.indeed.com/"
+
+# Try to open the file and read the current number
+try:
+    with open(file_name, "r") as file:
+        number = int(file.read())
+except FileNotFoundError:
+    # If the file does not exist, start with 0
+    number = 0
+
+
+
+
+# Function to check if a string contains any numbers
+def contains_number(s):
+    return any(char.isdigit() for char in s)
+
+
+# Initialize the WebDriver
+driver = webdriver.Chrome()
+
+
+# Function to open URL for the specified country
+def open_country_url(country, job_title):
+    country_urls = {
+        "United States": f"https://www.indeed.com/q-{job_title}-jobs.html?vjk=bcf4ca23e6b2ef6c",
+        "United Kingdom": "https://uk.indeed.com/",
+        "Canada": "https://ca.indeed.com/",
+        "Australia": "https://au.indeed.com/",
+        "India": "https://in.indeed.com/",
+        "United Arab Emirates": "https://ae.indeed.com/jobs?l=UAE&from=mobRdr&utm_source=%2Fm%2F&utm_medium=redir&utm_campaign=dt&vjk=cb2efc92f151444b",
+        "Singapore": "https://sg.indeed.com/",
+        "Brazil": "https://www.indeed.com/jobs?q=&l=brazil&from=searchOnDesktopSerp&vjk=1fff6a229ed32153",
+        "Netherland": "https://www.indeed.com/q-the-netherlands-jobs.html?vjk=7dc9bc4d31be0020"
+    }
+    if country in country_urls:
+        url = country_urls[country]
+        print(f"Opening: {url}")
+        driver.get(url)
+    else:
+        print(f"No URL found for {country}")
+
+
+def job_and_country_search(country, job_title):
+    # Change the XPath based on country if required (example for US)
+    if country == "United States":
+        job_title_search_path = "/html/body/main/div/div[2]/div/div[2]/div/div/div/div[1]/form/div/div[1]/div[1]/div/div/span/input"
+        country_search_path = "/html/body/main/div/div[2]/div/div[2]/div/div/div/div[1]/form/div/div[1]/div[3]/div/div/span/input"
+        search_path = "/html/body/main/div/div[2]/div/div[2]/div/div/div/div[1]/form/div/div[2]/button"
+    elif country == "United Kingdom":
+        # Adjust these paths for other countrys if needed
+        job_title_search_path = "/html/body/div[2]/div[1]/div/span/div[4]/div[1]/div/div/div/div/form/div/div[1]/div[1]/div/div/span/input"
+        country_search_path = "/html/body/div[2]/div[1]/div/span/div[4]/div[1]/div/div/div/div/form/div/div[1]/div[3]/div/div/span/input"
+        search_path = "/html/body/div[2]/div[1]/div/span/div[4]/div[1]/div/div/div/div/form/div/div[2]/button"
+    elif country == "Canada":
+        # Adjust these paths for other countrys if needed
+        job_title_search_path = "/html/body/div[2]/div[1]/div/span/div[4]/div[2]/div/div/div/div/form/div/div[1]/div[1]/div/div/span/input"
+        country_search_path = "/html/body/div[2]/div[1]/div/span/div[4]/div[2]/div/div/div/div/form/div/div[1]/div[3]/div/div/span/input"
+        search_path = "/html/body/div[2]/div[1]/div/span/div[4]/div[2]/div/div/div/div/form/div/div[2]/button"
+    elif country == "Australia":
+        # Adjust these paths for other countrys if needed
+        job_title_search_path = "/html/body/div[2]/div[1]/div/span/div[4]/div[1]/div/div/div/div/form/div/div[1]/div[1]/div/div/span/input"
+        country_search_path = "/html/body/div[2]/div[1]/div/span/div[4]/div[1]/div/div/div/div/form/div/div[1]/div[3]/div/div/span/input"
+        search_path = "/html/body/div[2]/div[1]/div/span/div[4]/div[1]/div/div/div/div/form/div/div[2]/button"
+
+    elif country == "Singapore":
+        # Adjust these paths for other countrys if needed
+        job_title_search_path = "/html/body/div[2]/div[1]/div/span/div[4]/div[1]/div/div/div/div/form/div/div[1]/div[1]/div/div/span/input"
+        country_search_path = "/html/body/div[2]/div[1]/div/span/div[4]/div[1]/div/div/div/div/form/div/div[1]/div[3]/div/div/span/input"
+        search_path = "/html/body/div[2]/div[1]/div/span/div[4]/div[1]/div/div/div/div/form/div/div[2]/button"
+
+    elif country == "United Arab Emirates":
+        # Adjust these paths for other countrys if needed
+        job_title_search_path = "/html/body/main/div/div[2]/div/div[2]/div/div/div/div[1]/form/div/div[1]/div[1]/div/div/span/input"
+        country_search_path = "/html/body/main/div/div[2]/div/div[2]/div/div/div/div[1]/form/div/div[1]/div[3]/div/div/span/input"
+        search_path = "/html/body/main/div/div[2]/div/div[2]/div/div/div/div[1]/form/div/div[2]/button"
+
+    elif country == "Brazil":
+        # Adjust these paths for other countrys if needed
+        job_title_search_path = "/html/body/main/div/div[2]/div/div[2]/div/div/div/div[1]/form/div/div[1]/div[1]/div/div/span/input"
+        country_search_path = "/html/body/main/div/div[2]/div/div[2]/div/div/div/div[1]/form/div/div[1]/div[3]/div/div/span/input"
+        search_path = "/html/body/main/div/div[2]/div/div[2]/div/div/div/div[1]/form/div/div[2]/button"
+
+    elif country == "Netherland":
+
+        # Adjust these paths for other countrys if needed
+        job_title_search_path = "/html/body/main/div/div[2]/div/div[2]/div/div/div/div[1]/form/div/div[1]/div[1]/div/div/span/input"
+        country_search_path = "/html/body/main/div/div[2]/div/div[2]/div/div/div/div[1]/form/div/div[1]/div[3]/div/div/span/input"
+        search_path = "/html/body/main/div/div[2]/div/div[2]/div/div/div/div[1]/form/div/div[2]/button"
+
+    else:
+        # Adjust these paths for other countrys if needed
+        job_title_search_path = "/html/body/div[2]/div[1]/div/span/div[4]/div[1]/div/div/div/div/form/div/div[1]/div[1]/div/div/span/input"
+        country_search_path = "/html/body/div[2]/div[1]/div/span/div[4]/div[1]/div/div/div/div/form/div/div[1]/div[3]/div/div/span/input"
+        search_path = "/html/body/div/div[1]/div/span/div[4]/div[1]/div/div/div/div/form/div/div[2]/button"
+
+    # Find and input job title
+    job_title_search = driver.find_element(By.XPATH, job_title_search_path)
+    job_title_search.send_keys(Keys.CONTROL, 'a')
+    job_title_search.send_keys(Keys.BACKSPACE)
+    job_title_search.send_keys(job_title)
+
+    # Find and input country
+    country_search = driver.find_element(By.XPATH, country_search_path)
+    country_search.send_keys(Keys.CONTROL, 'a')
+    country_search.send_keys(Keys.BACKSPACE)
+    country_search.send_keys(country)
+    # country_search.send_keys(Keys.RETURN)
+
+    search = driver.find_element(By.XPATH, search_path)
+
+    search.click()
+
+    print("Search button got clicked")
+
+    # Allow some time for results to load
+    time.sleep(10)
+
+
+def click_next_page():
+    try:
+        # Locate the "Next Page" button using its unique 'data-testid' attribute
+        next_button = driver.find_element(By.CSS_SELECTOR, 'a[data-testid="pagination-page-next"]')
+
+        # Check if the button is disabled or not available (this is for cases where the last page is reached)
+        if not next_button:
+            print("No more pages to navigate.")
+            return False
+
+        # Click the "Next Page" button
+        next_button.click()
+        print("Navigated to the next page.")
+
+        # Wait for the next page to load
+        time.sleep(5)
+        return True
+
+    except NoSuchElementException:
+        print("No 'Next Page' button found. Reached the last page.")
+        return False
+
+
+# Initialize a new workbook
+workbook = openpyxl.Workbook()
+
+
+def job_list_scraping(country, workbook, job_title, field, sheet):
+    field = field
+
+    # Change the XPath based on country if required (example for US)
+    if country == "United States":
+        print("I am in united states")
+        total_pages = 1
+
+        job_count = 0
+        # Find elements using the unique XPath for each field
+        job_listings = driver.find_elements(By.CSS_SELECTOR, 'li.css-5lfssm')  # Select each job listing block
+        stop_scraping = False  # Initialize flag to stop scraping
+
+        while total_pages <= 60 and not stop_scraping:
+
+            time.sleep(2)
+            print(f"Scraping page {total_pages}...")
+            total_pages = total_pages + 1
+            time.sleep(5)  # Allow the page to load
+
+            try:
+
+                # Get job postings
+                job_listings = driver.find_elements(By.CSS_SELECTOR, 'li.css-5lfssm')
+                job_description_list = []
+
+                if not job_listings:
+                    print("No jobs found on this page.")
+                    break
+
+                # Iterate over the job listings and extract data
+                for job in job_listings:
+                    if job_count >= 60:
+                        stop_scraping = True  # Set the flag to True to stop both loops
+                        break  # Break out of the for loop
+                    try:
+                        driver.execute_script("arguments[0].scrollIntoView();", job)
+
+                        company_name = job.find_element(By.CSS_SELECTOR, 'span[data-testid="company-name"]').text
+
+                        # Extract job title and link
+                        job_title_element = job.find_element(By.CSS_SELECTOR, 'a.jcs-JobTitle')
+                        job_title = job_title_element.text
+                        job_link = job_title_element.get_attribute('href')
+
+                        # Extract location
+                        location = job.find_element(By.CSS_SELECTOR, 'div[data-testid="text-location"]').text
+                        # location = location_path.text
+                        #
+                        # location_path.click()
+                        job.click()
+
+                        try:
+                            # Assuming driver is already initialized
+                            wait = WebDriverWait(driver, 10)
+
+                            # Locate all span elements under #salaryInfoAndJobType
+                            span_elements = wait.until(EC.presence_of_all_elements_located(
+                                (By.XPATH, "//div[@id='salaryInfoAndJobType']/span")))
+
+                            if len(span_elements) == 1:
+                                # Only one span element present, check if it's salary or job type
+                                element_text = span_elements[0].text
+                                if any(char.isdigit() for char in
+                                       element_text):  # Check if it contains any digits (possible salary)
+                                    salary_element = element_text
+                                    job_type_element = "N/A"  # No job type available
+                                else:
+                                    salary_element = "N/A"  # No salary information
+                                    job_type_element = element_text
+                            elif len(span_elements) == 2:
+                                # Both salary and job type are present
+                                salary_element = span_elements[0].text
+                                job_type_element = span_elements[1].text
+                            else:
+                                salary_element = "N/A"
+                                job_type_element = "N/A"
+
+                            print(f"Salary: {salary_element}")
+                            print(f"Job Type: {job_type_element}")
+
+                        except Exception as e:
+                            salary_element = "N/A"
+                            job_type_element = "N/A"
+                            print(f"Error: {e}")
+
+                        time.sleep(3)
+
+                        # Assuming driver is already initialized
+                        try:
+                            # Initialize WebDriverWait object with a timeout of 10 seconds
+                            wait = WebDriverWait(driver, 10)
+                            # Wait for the job description element to be visible
+                            job_description = wait.until(EC.visibility_of_element_located(
+                                (By.ID, "jobDescriptionText")))
+
+                            # Ensure the element is scrolled into view
+                            driver.execute_script("arguments[0].scrollIntoView(true);", job_description)
+
+                            # Extract the text inside the job description
+                            job_description_text = job_description.text
+
+                            print("Job Description:")
+                            print(job_description_text)
+
+                        except Exception as e:
+                            job_description_text = "N/A"
+                            print(f"Error: {e}")
+
+                        # Print extracted information
+                        print(f"Company Name: {company_name}")
+                        print(f"Job Title: {job_title}")
+                        print(f"Job Link: {job_link}")
+                        print(f"Location: {location}")
+                        print(f"Salary: {salary_element}")
+                        print(f"Job Type: {job_type_element}")
+                        print(f"Job Description: {job_description_text}")
+
+                        print("=" * 50)
+
+                        # Save the job details in the sheet
+                        sheet.append([
+                            job_title,
+                            company_name,
+                            location,
+                            job_link,
+                            salary_element,
+                            job_type_element,
+                            job_description_text
+                        ])
+                        workbook.save(f"{field}.xlsx")
+                        print("File Saved")
+                        time.sleep(2)
+                        print(job_count)
+                        print(f"The job count is {job_count}")
+
+                        job_count = job_count + 1
+                    except Exception as e:
+                        print(f"This is odd one out list {e}")
+                        # time.sleep(300)
+
+                        continue
+
+                print(job_description_list)
+                if click_next_page():
+                    print("I am True")
+                    continue
+
+                else:
+                    print("I am False")
+
+                    break
+
+
+
+            except Exception as e:
+
+                print(f"Error on page {total_pages}")
+                total_pages = total_pages + 1
+                # time.sleep(500)
+                break
+
+
+    elif country == "United Kingdom":
+
+        print("I am in United Kingdom")
+        total_pages = 1
+
+        job_count = 0
+        # Find elements using the unique XPath for each field
+        job_listings = driver.find_elements(By.CSS_SELECTOR, 'li.css-5lfssm')  # Select each job listing block
+        stop_scraping = False  # Initialize flag to stop scraping
+
+        while total_pages <= 60 and not stop_scraping:
+
+            time.sleep(2)
+            print(f"Scraping page {total_pages}...")
+            total_pages = total_pages + 1
+            time.sleep(5)  # Allow the page to load
+
+            try:
+
+                # Get job postings
+                job_listings = driver.find_elements(By.CSS_SELECTOR, 'li.css-5lfssm')
+                job_description_list = []
+
+                if not job_listings:
+                    print("No jobs found on this page.")
+                    break
+
+                # Iterate over the job listings and extract data
+                for job in job_listings:
+                    if job_count >= 60:
+                        stop_scraping = True  # Set the flag to True to stop both loops
+                        break  # Break out of the for loop
+                    try:
+                        driver.execute_script("arguments[0].scrollIntoView();", job)
+
+                        company_name = job.find_element(By.CSS_SELECTOR, 'span[data-testid="company-name"]').text
+
+                        # Extract job title and link
+                        job_title_element = job.find_element(By.CSS_SELECTOR, 'a.jcs-JobTitle')
+                        job_title = job_title_element.text
+                        job_link = job_title_element.get_attribute('href')
+
+                        # Extract location
+                        location = job.find_element(By.CSS_SELECTOR, 'div[data-testid="text-location"]').text
+                        # location = location_path.text
+                        #
+                        # location_path.click()
+                        job.click()
+
+                        try:
+                            # Assuming driver is already initialized
+                            wait = WebDriverWait(driver, 10)
+
+                            # Locate all span elements under #salaryInfoAndJobType
+                            span_elements = wait.until(EC.presence_of_all_elements_located(
+                                (By.XPATH, "//div[@id='salaryInfoAndJobType']/span")))
+
+                            if len(span_elements) == 1:
+                                # Only one span element present, check if it's salary or job type
+                                element_text = span_elements[0].text
+                                if any(char.isdigit() for char in
+                                       element_text):  # Check if it contains any digits (possible salary)
+                                    salary_element = element_text
+                                    job_type_element = "N/A"  # No job type available
+                                else:
+                                    salary_element = "N/A"  # No salary information
+                                    job_type_element = element_text
+                            elif len(span_elements) == 2:
+                                # Both salary and job type are present
+                                salary_element = span_elements[0].text
+                                job_type_element = span_elements[1].text
+                            else:
+                                salary_element = "N/A"
+                                job_type_element = "N/A"
+
+                            print(f"Salary: {salary_element}")
+                            print(f"Job Type: {job_type_element}")
+
+                        except Exception as e:
+                            salary_element = "N/A"
+                            job_type_element = "N/A"
+                            print(f"Error: {e}")
+
+                        time.sleep(3)
+
+                        # Assuming driver is already initialized
+                        try:
+                            # Initialize WebDriverWait object with a timeout of 10 seconds
+                            wait = WebDriverWait(driver, 10)
+                            # Wait for the job description element to be visible
+                            job_description = wait.until(EC.visibility_of_element_located(
+                                (By.ID, "jobDescriptionText")))
+
+                            # Ensure the element is scrolled into view
+                            driver.execute_script("arguments[0].scrollIntoView(true);", job_description)
+
+                            # Extract the text inside the job description
+                            job_description_text = job_description.text
+
+                            print("Job Description:")
+                            print(job_description_text)
+
+                        except Exception as e:
+                            job_description_text = "N/A"
+                            print(f"Error: {e}")
+
+                        # Print extracted information
+                        print(f"Company Name: {company_name}")
+                        print(f"Job Title: {job_title}")
+                        print(f"Job Link: {job_link}")
+                        print(f"Location: {location}")
+                        print(f"Salary: {salary_element}")
+                        print(f"Job Type: {job_type_element}")
+                        print(f"Job Description: {job_description_text}")
+
+                        print("=" * 50)
+
+                        # Save the job details in the sheet
+                        sheet.append([
+                            job_title,
+                            company_name,
+                            location,
+                            job_link,
+                            salary_element,
+                            job_type_element,
+                            job_description_text
+                        ])
+                        workbook.save(f"{field}.xlsx")
+                        print("File Saved")
+                        time.sleep(2)
+                        print(job_count)
+                        print(f"The job count is {job_count}")
+
+                        job_count = job_count + 1
+                    except Exception as e:
+                        print(f"This is odd one out list {e}")
+                        # time.sleep(300)
+
+                        continue
+
+                print(job_description_list)
+                if click_next_page():
+                    print("I am True")
+                    continue
+
+                else:
+                    print("I am False")
+
+                    break
+
+
+
+            except Exception as e:
+                print(f"Error on page {total_pages}")
+                total_pages = total_pages + 1
+                # time.sleep(500)
+                break
+
+    elif country == "Canada":
+        print("I am in Canada")
+        total_pages = 1
+
+        job_count = 0
+        # Find elements using the unique XPath for each field
+        job_listings = driver.find_elements(By.CSS_SELECTOR, 'li.css-5lfssm')  # Select each job listing block
+        stop_scraping = False  # Initialize flag to stop scraping
+
+        while total_pages <= 60 and not stop_scraping:
+
+            time.sleep(2)
+            print(f"Scraping page {total_pages}...")
+            total_pages = total_pages + 1
+            time.sleep(5)  # Allow the page to load
+
+            try:
+
+                # Get job postings
+                job_listings = driver.find_elements(By.CSS_SELECTOR, 'li.css-5lfssm')
+                job_description_list = []
+
+                if not job_listings:
+                    print("No jobs found on this page.")
+                    break
+
+                # Iterate over the job listings and extract data
+                for job in job_listings:
+                    if job_count >= 60:
+                        stop_scraping = True  # Set the flag to True to stop both loops
+                        break  # Break out of the for loop
+                    try:
+                        driver.execute_script("arguments[0].scrollIntoView();", job)
+
+                        company_name = job.find_element(By.CSS_SELECTOR, 'span[data-testid="company-name"]').text
+
+                        # Extract job title and link
+                        job_title_element = job.find_element(By.CSS_SELECTOR, 'a.jcs-JobTitle')
+                        job_title = job_title_element.text
+                        job_link = job_title_element.get_attribute('href')
+
+                        # Extract location
+                        location = job.find_element(By.CSS_SELECTOR, 'div[data-testid="text-location"]').text
+                        # location = location_path.text
+                        #
+                        # location_path.click()
+                        job.click()
+
+                        try:
+                            # Assuming driver is already initialized
+                            wait = WebDriverWait(driver, 10)
+
+                            # Locate all span elements under #salaryInfoAndJobType
+                            span_elements = wait.until(EC.presence_of_all_elements_located(
+                                (By.XPATH, "//div[@id='salaryInfoAndJobType']/span")))
+
+                            if len(span_elements) == 1:
+                                # Only one span element present, check if it's salary or job type
+                                element_text = span_elements[0].text
+                                if any(char.isdigit() for char in
+                                       element_text):  # Check if it contains any digits (possible salary)
+                                    salary_element = element_text
+                                    job_type_element = "N/A"  # No job type available
+                                else:
+                                    salary_element = "N/A"  # No salary information
+                                    job_type_element = element_text
+                            elif len(span_elements) == 2:
+                                # Both salary and job type are present
+                                salary_element = span_elements[0].text
+                                job_type_element = span_elements[1].text
+                            else:
+                                salary_element = "N/A"
+                                job_type_element = "N/A"
+
+                            print(f"Salary: {salary_element}")
+                            print(f"Job Type: {job_type_element}")
+
+                        except Exception as e:
+                            salary_element = "N/A"
+                            job_type_element = "N/A"
+                            print(f"Error: {e}")
+
+                        time.sleep(3)
+
+                        # Assuming driver is already initialized
+                        try:
+                            # Initialize WebDriverWait object with a timeout of 10 seconds
+                            wait = WebDriverWait(driver, 10)
+                            # Wait for the job description element to be visible
+                            job_description = wait.until(EC.visibility_of_element_located(
+                                (By.ID, "jobDescriptionText")))
+
+                            # Ensure the element is scrolled into view
+                            driver.execute_script("arguments[0].scrollIntoView(true);", job_description)
+
+                            # Extract the text inside the job description
+                            job_description_text = job_description.text
+
+                            print("Job Description:")
+                            print(job_description_text)
+
+                        except Exception as e:
+                            job_description_text = "N/A"
+                            print(f"Error: {e}")
+
+                        # Print extracted information
+                        print(f"Company Name: {company_name}")
+                        print(f"Job Title: {job_title}")
+                        print(f"Job Link: {job_link}")
+                        print(f"Location: {location}")
+                        print(f"Salary: {salary_element}")
+                        print(f"Job Type: {job_type_element}")
+                        print(f"Job Description: {job_description_text}")
+
+                        print("=" * 50)
+
+                        # Save the job details in the sheet
+                        sheet.append([
+                            job_title,
+                            company_name,
+                            location,
+                            job_link,
+                            salary_element,
+                            job_type_element,
+                            job_description_text
+                        ])
+                        workbook.save(f"{field}.xlsx")
+                        print("File Saved")
+                        time.sleep(2)
+                        print(job_count)
+                        print(f"The job count is {job_count}")
+
+                        job_count = job_count + 1
+                    except Exception as e:
+                        print(f"This is odd one out list {e}")
+                        # time.sleep(300)
+
+                        continue
+
+                print(job_description_list)
+                if click_next_page():
+                    print("I am True")
+                    continue
+
+                else:
+                    print("I am False")
+
+                    break
+
+
+
+            except Exception as e:
+
+                print(f"Error on page {total_pages}")
+                total_pages = total_pages + 1
+                # time.sleep(500)
+                break
+
+    elif country == "Australia":
+
+        print("I am in Australia")
+        total_pages = 1
+
+        job_count = 0
+        # Find elements using the unique XPath for each field
+        job_listings = driver.find_elements(By.CSS_SELECTOR, 'li.css-5lfssm')  # Select each job listing block
+        stop_scraping = False  # Initialize flag to stop scraping
+
+        while total_pages <= 60 and not stop_scraping:
+
+            time.sleep(2)
+            print(f"Scraping page {total_pages}...")
+            total_pages = total_pages + 1
+            time.sleep(5)  # Allow the page to load
+
+            try:
+
+                # Get job postings
+                job_listings = driver.find_elements(By.CSS_SELECTOR, 'li.css-5lfssm')
+                job_description_list = []
+
+                if not job_listings:
+                    print("No jobs found on this page.")
+                    break
+
+                # Iterate over the job listings and extract data
+                for job in job_listings:
+                    if job_count >= 60:
+                        stop_scraping = True  # Set the flag to True to stop both loops
+                        break  # Break out of the for loop
+                    try:
+                        driver.execute_script("arguments[0].scrollIntoView();", job)
+
+                        company_name = job.find_element(By.CSS_SELECTOR, 'span[data-testid="company-name"]').text
+
+                        # Extract job title and link
+                        job_title_element = job.find_element(By.CSS_SELECTOR, 'a.jcs-JobTitle')
+                        job_title = job_title_element.text
+                        job_link = job_title_element.get_attribute('href')
+
+                        # Extract location
+                        location = job.find_element(By.CSS_SELECTOR, 'div[data-testid="text-location"]').text
+                        # location = location_path.text
+                        #
+                        # location_path.click()
+                        job.click()
+
+                        try:
+                            # Assuming driver is already initialized
+                            wait = WebDriverWait(driver, 10)
+
+                            # Locate all span elements under #salaryInfoAndJobType
+                            span_elements = wait.until(EC.presence_of_all_elements_located(
+                                (By.XPATH, "//div[@id='salaryInfoAndJobType']/span")))
+
+                            if len(span_elements) == 1:
+                                # Only one span element present, check if it's salary or job type
+                                element_text = span_elements[0].text
+                                if any(char.isdigit() for char in
+                                       element_text):  # Check if it contains any digits (possible salary)
+                                    salary_element = element_text
+                                    job_type_element = "N/A"  # No job type available
+                                else:
+                                    salary_element = "N/A"  # No salary information
+                                    job_type_element = element_text
+                            elif len(span_elements) == 2:
+                                # Both salary and job type are present
+                                salary_element = span_elements[0].text
+                                job_type_element = span_elements[1].text
+                            else:
+                                salary_element = "N/A"
+                                job_type_element = "N/A"
+
+                            print(f"Salary: {salary_element}")
+                            print(f"Job Type: {job_type_element}")
+
+                        except Exception as e:
+                            salary_element = "N/A"
+                            job_type_element = "N/A"
+                            print(f"Error: {e}")
+
+                        time.sleep(3)
+
+                        # Assuming driver is already initialized
+                        try:
+                            # Initialize WebDriverWait object with a timeout of 10 seconds
+                            wait = WebDriverWait(driver, 10)
+                            # Wait for the job description element to be visible
+                            job_description = wait.until(EC.visibility_of_element_located(
+                                (By.ID, "jobDescriptionText")))
+
+                            # Ensure the element is scrolled into view
+                            driver.execute_script("arguments[0].scrollIntoView(true);", job_description)
+
+                            # Extract the text inside the job description
+                            job_description_text = job_description.text
+
+                            print("Job Description:")
+                            print(job_description_text)
+
+                        except Exception as e:
+                            job_description_text = "N/A"
+                            print(f"Error: {e}")
+
+                        # Print extracted information
+                        print(f"Company Name: {company_name}")
+                        print(f"Job Title: {job_title}")
+                        print(f"Job Link: {job_link}")
+                        print(f"Location: {location}")
+                        print(f"Salary: {salary_element}")
+                        print(f"Job Type: {job_type_element}")
+                        print(f"Job Description: {job_description_text}")
+
+                        print("=" * 50)
+
+                        # Save the job details in the sheet
+                        sheet.append([
+                            job_title,
+                            company_name,
+                            location,
+                            job_link,
+                            salary_element,
+                            job_type_element,
+                            job_description_text
+                        ])
+                        workbook.save(f"{field}.xlsx")
+                        print("File Saved")
+                        time.sleep(2)
+                        print(job_count)
+                        print(f"The job count is {job_count}")
+
+                        job_count = job_count + 1
+                    except Exception as e:
+                        print(f"This is odd one out list {e}")
+                        # time.sleep(300)
+
+                        continue
+
+                print(job_description_list)
+                if click_next_page():
+                    print("I am True")
+                    continue
+
+                else:
+                    print("I am False")
+
+                    break
+
+
+
+            except Exception as e:
+
+                print(f"Error on page {total_pages}")
+                total_pages = total_pages + 1
+                # time.sleep(500)
+                break
+
+    elif country == "Singapore":
+
+        print("I am in Singapore")
+        total_pages = 1
+
+        job_count = 0
+        # Find elements using the unique XPath for each field
+        job_listings = driver.find_elements(By.CSS_SELECTOR, 'li.css-5lfssm')  # Select each job listing block
+        stop_scraping = False  # Initialize flag to stop scraping
+
+        while total_pages <= 60 and not stop_scraping:
+
+            time.sleep(2)
+            print(f"Scraping page {total_pages}...")
+            total_pages = total_pages + 1
+            time.sleep(5)  # Allow the page to load
+
+            try:
+
+                # Get job postings
+                job_listings = driver.find_elements(By.CSS_SELECTOR, 'li.css-5lfssm')
+                job_description_list = []
+
+                if not job_listings:
+                    print("No jobs found on this page.")
+                    break
+
+                # Iterate over the job listings and extract data
+                for job in job_listings:
+                    if job_count >= 60:
+                        stop_scraping = True  # Set the flag to True to stop both loops
+                        break  # Break out of the for loop
+                    try:
+                        driver.execute_script("arguments[0].scrollIntoView();", job)
+
+                        company_name = job.find_element(By.CSS_SELECTOR, 'span[data-testid="company-name"]').text
+
+                        # Extract job title and link
+                        job_title_element = job.find_element(By.CSS_SELECTOR, 'a.jcs-JobTitle')
+                        job_title = job_title_element.text
+                        job_link = job_title_element.get_attribute('href')
+
+                        # Extract location
+                        location = job.find_element(By.CSS_SELECTOR, 'div[data-testid="text-location"]').text
+                        # location = location_path.text
+                        #
+                        # location_path.click()
+                        job.click()
+
+                        try:
+                            # Assuming driver is already initialized
+                            wait = WebDriverWait(driver, 10)
+
+                            # Locate all span elements under #salaryInfoAndJobType
+                            span_elements = wait.until(EC.presence_of_all_elements_located(
+                                (By.XPATH, "//div[@id='salaryInfoAndJobType']/span")))
+
+                            if len(span_elements) == 1:
+                                # Only one span element present, check if it's salary or job type
+                                element_text = span_elements[0].text
+                                if any(char.isdigit() for char in
+                                       element_text):  # Check if it contains any digits (possible salary)
+                                    salary_element = element_text
+                                    job_type_element = "N/A"  # No job type available
+                                else:
+                                    salary_element = "N/A"  # No salary information
+                                    job_type_element = element_text
+                            elif len(span_elements) == 2:
+                                # Both salary and job type are present
+                                salary_element = span_elements[0].text
+                                job_type_element = span_elements[1].text
+                            else:
+                                salary_element = "N/A"
+                                job_type_element = "N/A"
+
+                            print(f"Salary: {salary_element}")
+                            print(f"Job Type: {job_type_element}")
+
+                        except Exception as e:
+                            salary_element = "N/A"
+                            job_type_element = "N/A"
+                            print(f"Error: {e}")
+
+                        time.sleep(3)
+
+                        # Assuming driver is already initialized
+                        try:
+                            # Initialize WebDriverWait object with a timeout of 10 seconds
+                            wait = WebDriverWait(driver, 10)
+                            # Wait for the job description element to be visible
+                            job_description = wait.until(EC.visibility_of_element_located(
+                                (By.ID, "jobDescriptionText")))
+
+                            # Ensure the element is scrolled into view
+                            driver.execute_script("arguments[0].scrollIntoView(true);", job_description)
+
+                            # Extract the text inside the job description
+                            job_description_text = job_description.text
+
+                            print("Job Description:")
+                            print(job_description_text)
+
+                        except Exception as e:
+                            job_description_text = "N/A"
+                            print(f"Error: {e}")
+
+                        # Print extracted information
+                        print(f"Company Name: {company_name}")
+                        print(f"Job Title: {job_title}")
+                        print(f"Job Link: {job_link}")
+                        print(f"Location: {location}")
+                        print(f"Salary: {salary_element}")
+                        print(f"Job Type: {job_type_element}")
+                        print(f"Job Description: {job_description_text}")
+
+                        print("=" * 50)
+
+                        # Save the job details in the sheet
+                        sheet.append([
+                            job_title,
+                            company_name,
+                            location,
+                            job_link,
+                            salary_element,
+                            job_type_element,
+                            job_description_text
+                        ])
+                        workbook.save(f"{field}.xlsx")
+                        print("File Saved")
+                        time.sleep(2)
+                        print(job_count)
+                        print(f"The job count is {job_count}")
+
+                        job_count = job_count + 1
+                    except Exception as e:
+                        print(f"This is odd one out list {e}")
+                        # time.sleep(300)
+
+                        continue
+
+                print(job_description_list)
+                if click_next_page():
+                    print("I am True")
+                    continue
+
+                else:
+                    print("I am False")
+
+                    break
+
+
+
+            except Exception as e:
+
+                print(f"Error on page {total_pages}")
+                total_pages = total_pages + 1
+                # time.sleep(500)
+                break
+
+    elif country == "United Arab Emirates":
+        print("I am in United Arab Emirates")
+        total_pages = 1
+
+        job_count = 0
+        # Find elements using the unique XPath for each field
+        job_listings = driver.find_elements(By.CSS_SELECTOR, 'li.css-5lfssm')  # Select each job listing block
+        stop_scraping = False  # Initialize flag to stop scraping
+
+        while total_pages <= 60 and not stop_scraping:
+
+            time.sleep(2)
+            print(f"Scraping page {total_pages}...")
+            total_pages = total_pages + 1
+            time.sleep(5)  # Allow the page to load
+
+            try:
+
+                # Get job postings
+                job_listings = driver.find_elements(By.CSS_SELECTOR, 'li.css-5lfssm')
+                job_description_list = []
+
+                if not job_listings:
+                    print("No jobs found on this page.")
+                    break
+
+                # Iterate over the job listings and extract data
+                for job in job_listings:
+                    if job_count >= 60:
+                        stop_scraping = True  # Set the flag to True to stop both loops
+                        break  # Break out of the for loop
+                    try:
+                        driver.execute_script("arguments[0].scrollIntoView();", job)
+
+                        company_name = job.find_element(By.CSS_SELECTOR, 'span[data-testid="company-name"]').text
+
+                        # Extract job title and link
+                        job_title_element = job.find_element(By.CSS_SELECTOR, 'a.jcs-JobTitle')
+                        job_title = job_title_element.text
+                        job_link = job_title_element.get_attribute('href')
+
+                        # Extract location
+                        location = job.find_element(By.CSS_SELECTOR, 'div[data-testid="text-location"]').text
+                        # location = location_path.text
+                        #
+                        # location_path.click()
+                        job.click()
+
+                        try:
+                            # Assuming driver is already initialized
+                            wait = WebDriverWait(driver, 10)
+
+                            # Locate all span elements under #salaryInfoAndJobType
+                            span_elements = wait.until(EC.presence_of_all_elements_located(
+                                (By.XPATH, "//div[@id='salaryInfoAndJobType']/span")))
+
+                            if len(span_elements) == 1:
+                                # Only one span element present, check if it's salary or job type
+                                element_text = span_elements[0].text
+                                if any(char.isdigit() for char in
+                                       element_text):  # Check if it contains any digits (possible salary)
+                                    salary_element = element_text
+                                    job_type_element = "N/A"  # No job type available
+                                else:
+                                    salary_element = "N/A"  # No salary information
+                                    job_type_element = element_text
+                            elif len(span_elements) == 2:
+                                # Both salary and job type are present
+                                salary_element = span_elements[0].text
+                                job_type_element = span_elements[1].text
+                            else:
+                                salary_element = "N/A"
+                                job_type_element = "N/A"
+
+                            print(f"Salary: {salary_element}")
+                            print(f"Job Type: {job_type_element}")
+
+                        except Exception as e:
+                            salary_element = "N/A"
+                            job_type_element = "N/A"
+                            print(f"Error: {e}")
+
+                        time.sleep(3)
+
+                        # Assuming driver is already initialized
+                        try:
+                            # Initialize WebDriverWait object with a timeout of 10 seconds
+                            wait = WebDriverWait(driver, 10)
+                            # Wait for the job description element to be visible
+                            job_description = wait.until(EC.visibility_of_element_located(
+                                (By.ID, "jobDescriptionText")))
+
+                            # Ensure the element is scrolled into view
+                            driver.execute_script("arguments[0].scrollIntoView(true);", job_description)
+
+                            # Extract the text inside the job description
+                            job_description_text = job_description.text
+
+                            print("Job Description:")
+                            print(job_description_text)
+
+                        except Exception as e:
+                            job_description_text = "N/A"
+                            print(f"Error: {e}")
+
+                        # Print extracted information
+                        print(f"Company Name: {company_name}")
+                        print(f"Job Title: {job_title}")
+                        print(f"Job Link: {job_link}")
+                        print(f"Location: {location}")
+                        print(f"Salary: {salary_element}")
+                        print(f"Job Type: {job_type_element}")
+                        print(f"Job Description: {job_description_text}")
+
+                        print("=" * 50)
+
+                        # Save the job details in the sheet
+                        sheet.append([
+                            job_title,
+                            company_name,
+                            location,
+                            job_link,
+                            salary_element,
+                            job_type_element,
+                            job_description_text
+                        ])
+                        workbook.save(f"{field}.xlsx")
+                        print("File Saved")
+                        time.sleep(2)
+                        print(job_count)
+                        print(f"The job count is {job_count}")
+
+                        job_count = job_count + 1
+                    except Exception as e:
+                        print(f"This is odd one out list {e}")
+                        # time.sleep(300)
+
+                        continue
+
+                print(job_description_list)
+                if click_next_page():
+                    print("I am True")
+                    continue
+
+                else:
+                    print("I am False")
+
+                    break
+
+
+
+            except Exception as e:
+
+                print(f"Error on page {total_pages}")
+                total_pages = total_pages + 1
+                # time.sleep(500)
+                break
+
+    elif country == "Brazil":
+
+        print("I am in Brazil")
+        total_pages = 1
+
+        job_count = 0
+        # Find elements using the unique XPath for each field
+        job_listings = driver.find_elements(By.CSS_SELECTOR, 'li.css-5lfssm')  # Select each job listing block
+        stop_scraping = False  # Initialize flag to stop scraping
+
+        while total_pages <= 60 and not stop_scraping:
+
+            time.sleep(2)
+            print(f"Scraping page {total_pages}...")
+            total_pages = total_pages + 1
+            time.sleep(5)  # Allow the page to load
+
+            try:
+
+                # Get job postings
+                job_listings = driver.find_elements(By.CSS_SELECTOR, 'li.css-5lfssm')
+                job_description_list = []
+
+                if not job_listings:
+                    print("No jobs found on this page.")
+                    break
+
+                # Iterate over the job listings and extract data
+                for job in job_listings:
+                    if job_count >= 60:
+                        stop_scraping = True  # Set the flag to True to stop both loops
+                        break  # Break out of the for loop
+                    try:
+                        driver.execute_script("arguments[0].scrollIntoView();", job)
+
+                        company_name = job.find_element(By.CSS_SELECTOR, 'span[data-testid="company-name"]').text
+
+                        # Extract job title and link
+                        job_title_element = job.find_element(By.CSS_SELECTOR, 'a.jcs-JobTitle')
+                        job_title = job_title_element.text
+                        job_link = job_title_element.get_attribute('href')
+
+                        # Extract location
+                        location = job.find_element(By.CSS_SELECTOR, 'div[data-testid="text-location"]').text
+                        # location = location_path.text
+                        #
+                        # location_path.click()
+                        job.click()
+
+                        try:
+                            # Assuming driver is already initialized
+                            wait = WebDriverWait(driver, 10)
+
+                            # Locate all span elements under #salaryInfoAndJobType
+                            span_elements = wait.until(EC.presence_of_all_elements_located(
+                                (By.XPATH, "//div[@id='salaryInfoAndJobType']/span")))
+
+                            if len(span_elements) == 1:
+                                # Only one span element present, check if it's salary or job type
+                                element_text = span_elements[0].text
+                                if any(char.isdigit() for char in
+                                       element_text):  # Check if it contains any digits (possible salary)
+                                    salary_element = element_text
+                                    job_type_element = "N/A"  # No job type available
+                                else:
+                                    salary_element = "N/A"  # No salary information
+                                    job_type_element = element_text
+                            elif len(span_elements) == 2:
+                                # Both salary and job type are present
+                                salary_element = span_elements[0].text
+                                job_type_element = span_elements[1].text
+                            else:
+                                salary_element = "N/A"
+                                job_type_element = "N/A"
+
+                            print(f"Salary: {salary_element}")
+                            print(f"Job Type: {job_type_element}")
+
+                        except Exception as e:
+                            salary_element = "N/A"
+                            job_type_element = "N/A"
+                            print(f"Error: {e}")
+
+                        time.sleep(3)
+
+                        # Assuming driver is already initialized
+                        try:
+                            # Initialize WebDriverWait object with a timeout of 10 seconds
+                            wait = WebDriverWait(driver, 10)
+                            # Wait for the job description element to be visible
+                            job_description = wait.until(EC.visibility_of_element_located(
+                                (By.ID, "jobDescriptionText")))
+
+                            # Ensure the element is scrolled into view
+                            driver.execute_script("arguments[0].scrollIntoView(true);", job_description)
+
+                            # Extract the text inside the job description
+                            job_description_text = job_description.text
+
+                            print("Job Description:")
+                            print(job_description_text)
+
+                        except Exception as e:
+                            job_description_text = "N/A"
+                            print(f"Error: {e}")
+
+                        # Print extracted information
+                        print(f"Company Name: {company_name}")
+                        print(f"Job Title: {job_title}")
+                        print(f"Job Link: {job_link}")
+                        print(f"Location: {location}")
+                        print(f"Salary: {salary_element}")
+                        print(f"Job Type: {job_type_element}")
+                        print(f"Job Description: {job_description_text}")
+
+                        print("=" * 50)
+
+                        # Save the job details in the sheet
+                        sheet.append([
+                            job_title,
+                            company_name,
+                            location,
+                            job_link,
+                            salary_element,
+                            job_type_element,
+                            job_description_text
+                        ])
+                        workbook.save(f"{field}.xlsx")
+                        print("File Saved")
+                        time.sleep(2)
+                        print(job_count)
+                        print(f"The job count is {job_count}")
+
+                        job_count = job_count + 1
+                    except Exception as e:
+                        print(f"This is odd one out list {e}")
+                        # time.sleep(300)
+
+                        continue
+
+                print(job_description_list)
+                if click_next_page():
+                    print("I am True")
+                    continue
+
+                else:
+                    print("I am False")
+
+                    break
+
+
+
+            except Exception as e:
+                print(f"Error on page {total_pages}")
+                total_pages = total_pages + 1
+                # time.sleep(500)
+                break
+
+    elif country == "Netherland":
+
+        print("I am in Netherland")
+        total_pages = 1
+
+        job_count = 0
+        # Find elements using the unique XPath for each field
+        job_listings = driver.find_elements(By.CSS_SELECTOR, 'li.css-5lfssm')  # Select each job listing block
+        stop_scraping = False  # Initialize flag to stop scraping
+
+        while total_pages <= 60 and not stop_scraping:
+
+            time.sleep(2)
+            print(f"Scraping page {total_pages}...")
+            total_pages = total_pages + 1
+            time.sleep(5)  # Allow the page to load
+
+            try:
+
+                # Get job postings
+                job_listings = driver.find_elements(By.CSS_SELECTOR, 'li.css-5lfssm')
+                job_description_list = []
+
+                if not job_listings:
+                    print("No jobs found on this page.")
+                    break
+
+                # Iterate over the job listings and extract data
+                for job in job_listings:
+                    if job_count >= 60:
+                        stop_scraping = True  # Set the flag to True to stop both loops
+                        break  # Break out of the for loop
+                    try:
+                        driver.execute_script("arguments[0].scrollIntoView();", job)
+
+                        company_name = job.find_element(By.CSS_SELECTOR, 'span[data-testid="company-name"]').text
+
+                        # Extract job title and link
+                        job_title_element = job.find_element(By.CSS_SELECTOR, 'a.jcs-JobTitle')
+                        job_title = job_title_element.text
+                        job_link = job_title_element.get_attribute('href')
+
+                        # Extract location
+                        location = job.find_element(By.CSS_SELECTOR, 'div[data-testid="text-location"]').text
+                        # location = location_path.text
+                        #
+                        # location_path.click()
+                        job.click()
+
+                        try:
+                            # Assuming driver is already initialized
+                            wait = WebDriverWait(driver, 10)
+
+                            # Locate all span elements under #salaryInfoAndJobType
+                            span_elements = wait.until(EC.presence_of_all_elements_located(
+                                (By.XPATH, "//div[@id='salaryInfoAndJobType']/span")))
+
+                            if len(span_elements) == 1:
+                                # Only one span element present, check if it's salary or job type
+                                element_text = span_elements[0].text
+                                if any(char.isdigit() for char in
+                                       element_text):  # Check if it contains any digits (possible salary)
+                                    salary_element = element_text
+                                    job_type_element = "N/A"  # No job type available
+                                else:
+                                    salary_element = "N/A"  # No salary information
+                                    job_type_element = element_text
+                            elif len(span_elements) == 2:
+                                # Both salary and job type are present
+                                salary_element = span_elements[0].text
+                                job_type_element = span_elements[1].text
+                            else:
+                                salary_element = "N/A"
+                                job_type_element = "N/A"
+
+                            print(f"Salary: {salary_element}")
+                            print(f"Job Type: {job_type_element}")
+
+                        except Exception as e:
+                            salary_element = "N/A"
+                            job_type_element = "N/A"
+                            print(f"Error: {e}")
+
+                        time.sleep(3)
+
+                        # Assuming driver is already initialized
+                        try:
+                            # Initialize WebDriverWait object with a timeout of 10 seconds
+                            wait = WebDriverWait(driver, 10)
+                            # Wait for the job description element to be visible
+                            job_description = wait.until(EC.visibility_of_element_located(
+                                (By.ID, "jobDescriptionText")))
+
+                            # Ensure the element is scrolled into view
+                            driver.execute_script("arguments[0].scrollIntoView(true);", job_description)
+
+                            # Extract the text inside the job description
+                            job_description_text = job_description.text
+
+                            print("Job Description:")
+                            print(job_description_text)
+
+                        except Exception as e:
+                            job_description_text = "N/A"
+                            print(f"Error: {e}")
+
+                        # Print extracted information
+                        print(f"Company Name: {company_name}")
+                        print(f"Job Title: {job_title}")
+                        print(f"Job Link: {job_link}")
+                        print(f"Location: {location}")
+                        print(f"Salary: {salary_element}")
+                        print(f"Job Type: {job_type_element}")
+                        print(f"Job Description: {job_description_text}")
+
+                        print("=" * 50)
+
+                        # Save the job details in the sheet
+                        sheet.append([
+                            job_title,
+                            company_name,
+                            location,
+                            job_link,
+                            salary_element,
+                            job_type_element,
+                            job_description_text
+                        ])
+                        workbook.save(f"{field}.xlsx")
+                        print("File Saved")
+                        time.sleep(2)
+                        print(job_count)
+                        print(f"The job count is {job_count}")
+
+                        job_count = job_count + 1
+                    except Exception as e:
+                        print(f"This is odd one out list {e}")
+                        # time.sleep(300)
+
+                        continue
+
+                print(job_description_list)
+                if click_next_page():
+                    print("I am True")
+                    continue
+
+                else:
+                    print("I am False")
+
+                    break
+
+
+
+            except Exception as e:
+
+                print(f"Error on page {total_pages}")
+                total_pages = total_pages + 1
+                # time.sleep(500)
+                break
+
+    else:
+        print("I am in India")
+        total_pages = 1
+
+        job_count = 0
+        # Find elements using the unique XPath for each field
+        job_listings = driver.find_elements(By.CSS_SELECTOR, 'li.css-5lfssm')  # Select each job listing block
+        stop_scraping = False  # Initialize flag to stop scraping
+
+        while total_pages <= 60 and not stop_scraping:
+
+            time.sleep(2)
+            print(f"Scraping page {total_pages}...")
+            total_pages = total_pages + 1
+            time.sleep(5)  # Allow the page to load
+
+            try:
+
+                # Get job postings
+                job_listings = driver.find_elements(By.CSS_SELECTOR, 'li.css-5lfssm')
+                job_description_list = []
+
+                if not job_listings:
+                    print("No jobs found on this page.")
+                    break
+
+                # Iterate over the job listings and extract data
+                for job in job_listings:
+                    if job_count >= 60:
+                        stop_scraping = True  # Set the flag to True to stop both loops
+                        break  # Break out of the for loop
+                    try:
+                        driver.execute_script("arguments[0].scrollIntoView();", job)
+
+                        company_name = job.find_element(By.CSS_SELECTOR, 'span[data-testid="company-name"]').text
+
+                        # Extract job title and link
+                        job_title_element = job.find_element(By.CSS_SELECTOR, 'a.jcs-JobTitle')
+                        job_title = job_title_element.text
+                        job_link = job_title_element.get_attribute('href')
+
+                        # Extract location
+                        location = job.find_element(By.CSS_SELECTOR, 'div[data-testid="text-location"]').text
+                        # location = location_path.text
+                        #
+                        # location_path.click()
+                        job.click()
+
+                        try:
+                            # Assuming driver is already initialized
+                            wait = WebDriverWait(driver, 10)
+
+                            # Locate all span elements under #salaryInfoAndJobType
+                            span_elements = wait.until(EC.presence_of_all_elements_located(
+                                (By.XPATH, "//div[@id='salaryInfoAndJobType']/span")))
+
+                            if len(span_elements) == 1:
+                                # Only one span element present, check if it's salary or job type
+                                element_text = span_elements[0].text
+                                if any(char.isdigit() for char in
+                                       element_text):  # Check if it contains any digits (possible salary)
+                                    salary_element = element_text
+                                    job_type_element = "N/A"  # No job type available
+                                else:
+                                    salary_element = "N/A"  # No salary information
+                                    job_type_element = element_text
+                            elif len(span_elements) == 2:
+                                # Both salary and job type are present
+                                salary_element = span_elements[0].text
+                                job_type_element = span_elements[1].text
+                            else:
+                                salary_element = "N/A"
+                                job_type_element = "N/A"
+
+                            print(f"Salary: {salary_element}")
+                            print(f"Job Type: {job_type_element}")
+
+                        except Exception as e:
+                            salary_element = "N/A"
+                            job_type_element = "N/A"
+                            print(f"Error: {e}")
+
+                        time.sleep(3)
+
+                        # Assuming driver is already initialized
+                        try:
+                            # Initialize WebDriverWait object with a timeout of 10 seconds
+                            wait = WebDriverWait(driver, 10)
+                            # Wait for the job description element to be visible
+                            job_description = wait.until(EC.visibility_of_element_located(
+                                (By.ID, "jobDescriptionText")))
+
+                            # Ensure the element is scrolled into view
+                            driver.execute_script("arguments[0].scrollIntoView(true);", job_description)
+
+                            # Extract the text inside the job description
+                            job_description_text = job_description.text
+
+                            print("Job Description:")
+                            print(job_description_text)
+
+                        except Exception as e:
+                            job_description_text = "N/A"
+                            print(f"Error: {e}")
+
+                        # Print extracted information
+                        print(f"Company Name: {company_name}")
+                        print(f"Job Title: {job_title}")
+                        print(f"Job Link: {job_link}")
+                        print(f"Location: {location}")
+                        print(f"Salary: {salary_element}")
+                        print(f"Job Type: {job_type_element}")
+                        print(f"Job Description: {job_description_text}")
+
+                        print("=" * 50)
+
+                        # Save the job details in the sheet
+                        sheet.append([
+                            job_title,
+                            company_name,
+                            location,
+                            job_link,
+                            salary_element,
+                            job_type_element,
+                            job_description_text
+                        ])
+                        workbook.save(f"{field}.xlsx")
+                        print("File Saved")
+                        time.sleep(2)
+                        print(job_count)
+                        print(f"The job count is {job_count}")
+
+                        job_count = job_count + 1
+                    except Exception as e:
+                        print(f"This is odd one out list {e}")
+                        # time.sleep(300)
+
+                        continue
+
+                print(job_description_list)
+                if click_next_page():
+                    print("I am True")
+                    continue
+
+                else:
+                    print("I am False")
+                    break
+
+
+
+            except Exception as e:
+
+                print(f"Error on page {total_pages}")
+                total_pages = total_pages + 1
+                # time.sleep(500)
+                break
+
+
+def job_scraping(driver, job_title, workbook, field):
+    field = field
+    # Create a new sheet in the workbook with the job title
+    sheet = workbook.create_sheet(title=job_title)
+    # sheet.append(["Job Title", "Company Name", "Location", "Apply Link"])
+    # Define headers
+    headers = ["Job Title", "Company Name", "Location", "Job Link", "Salary", "Job Type", "Job Description"]
+
+    # Append headers to the sheet (usually done once at the start)
+    sheet.append(headers)
+
+    all_countries = [
+        "United States",
+        "United Kingdom",
+        "Canada",
+        "Australia",
+        "India",
+        "United Arab Emirates",
+        "Singapore",
+        "Brazil",
+        "Netherland"
+    ]
+    # If job title is "Solar Energy Technician", limit to countries starting from UAE
+    if job_title == "Full-Stack Developer":
+        countrys = all_countries[5:]  # Start from "United Arab Emirates"
+    else:
+        countrys = all_countries  # Use all countries
+    for country in countrys:
+        open_country_url(country, job_title)
+        time.sleep(5)
+
+        job_and_country_search(country, job_title)
+        time.sleep(5)
+
+        job_list_scraping(country, workbook, job_title, field, sheet)
+        time.sleep(5)
+        print("Final File Saved")
+        # Save the workbook after processing all jobs
+        workbook.save(f"{field}.xlsx")
+
+
+# Information Technology (IT) & Software Development
+it_jobs = [
+    # "Software Engineer",
+    # "Data Scientist",
+    # "Machine Learning",
+    # "AI Specialist",
+    # "Blockchain Developer",
+    # "Cloud Architect",
+    # "Cybersecurity Analyst",
+    # "UI UX Designer",
+    # "DevOps Engineer",
+    "Full-Stack Developer",
+    "Web Developer",
+    "Mobile App Developer"
+]
+
+# Healthcare & Medicine
+healthcare_jobs = [
+    "General Practitioner",
+    "Surgeon",
+    "Cardiologist",
+    "Dentist",
+    "Nurse",
+    "Medical Laboratory Technician",
+    "Pharmacist",
+    "Physiotherapist",
+    "Medical Researcher",
+    "Radiologist",
+    "Nutritionist",
+    "Psychologist",
+    "Occupational Therapist"
+]
+
+# Engineering & Manufacturing
+engineering_jobs = [
+    "Mechanical Engineer",
+    "Civil Engineer",
+    "Electrical Engineer",
+    "Electronics and Telecommunication Engineer",
+    "Aerospace Engineer",
+    "Chemical Engineer",
+    "Industrial Engineer",
+    "Marine Engineer",
+    "Automotive Engineer",
+    "Biomedical Engineer"
+]
+
+# Finance & Banking
+finance_jobs = [
+    "Financial Analyst",
+    "Chartered Accountant",
+    "Investment Banker",
+    "Financial Planner",
+    "Portfolio Manager",
+    "Risk Analyst",
+    "Auditor",
+    "Tax Consultant",
+    "Actuary",
+    "Stockbroker"
+]
+
+# Business & Management
+business_jobs = [
+    "Business Analyst",
+    "Marketing Manager",
+    "Human Resources Manager",
+    "Operations Manager",
+    "Project Manager",
+    "Product Manager",
+    "Entrepreneur",
+    "Consultant",
+    "Supply Chain Manager",
+    "Sales Manager"
+]
+
+# Education & Research
+education_jobs = [
+    "Professor",
+    "Lecturer",
+    "School Teacher",
+    "Research Scientist",
+    "Educational Counselor",
+    "Instructional Designer",
+    "Librarian",
+    "Curriculum Developer"
+]
+
+# Law & Legal Services
+law_jobs = [
+    "Corporate Lawyer",
+    "Criminal Lawyer",
+    "Civil Lawyer",
+    "Legal Advisor",
+    "Legal Researcher",
+    "Paralegal",
+    "Judge",
+    "Notary"
+]
+
+# Media, Journalism & Communication
+media_jobs = [
+    # "Journalist",
+    # "News Anchor",
+    # "Editor",
+    # "Copywriter",
+    # "Public Relations Manager",
+    # "Digital Marketing Specialist",
+    # "Social Media Manager",
+    "Advertising Executive",
+    "Content Creator"
+]
+
+# Creative Arts & Design
+creative_jobs = [
+    "Graphic Designer",
+    "Interior Designer",
+    "Fashion Designer",
+    "Fine Artist",
+    "Photographer",
+    "Animator",
+    "Film Director",
+    "Scriptwriter",
+    "Sound Engineer",
+    "Actor",
+    "Actress"
+]
+
+# Hospitality & Tourism
+hospitality_jobs = [
+    "Hotel Manager",
+    "Chef",
+    "Travel Agent",
+    "Tour Guide",
+    "Event Planner",
+    "Airline Steward",
+    "Stewardess",
+    "Travel Blogger",
+    "Restaurant Manager"
+]
+
+# Government Services & Public Sector
+government_jobs = [
+    "IAS Officer",
+    "IPS Officer",
+    "IFS Officer",
+    "Government Clerk",
+    "Railway Officer",
+    "Defense Personnel",
+    "Public Sector Bank Officer",
+    "Scientist"
+]
+
+# Agriculture & Environmental Science
+agriculture_jobs = [
+    "Agricultural Scientist",
+    "Environmental Consultant",
+    "Wildlife Conservationist",
+    "Horticulturist",
+    "Veterinary Doctor",
+    "Agronomist",
+    "Soil Scientist"
+]
+
+# Social Services & NGOs
+social_services_jobs = [
+    "Social Worker",
+    "NGO Program Manager",
+    "Human Rights Advocate",
+    "Community Development Officer",
+    "Public Health Educator",
+    "Disaster Management Specialist"
+]
+
+# Retail & E-commerce
+retail_jobs = [
+    "Retail Store Manager",
+    "E-commerce Specialist",
+    "Customer Service Representative",
+    "Merchandising Manager",
+    "Supply Chain Analyst"
+]
+
+# Entertainment & Sports
+entertainment_jobs = [
+    "Professional Athlete",
+    "Sports Coach",
+    "Fitness Trainer",
+    "Sports Analyst",
+    "Choreographer",
+    "Musician",
+    "Film Editor",
+    "Television Producer"
+]
+
+# Freelance & Gig Economy
+freelance_jobs = [
+    "Freelance Writer",
+    # "Freelance Graphic Designer",
+    # "Virtual Assistant",
+    # "Independent Consultant",
+    # "Content Creator",
+    # "Photographer",
+    # "Videographer"
+]
+
+# Real Estate & Property Management
+real_estate_jobs = [
+    "Real Estate Agent",
+    "Property Manager",
+    "Architect",
+    "Urban Planner",
+    "Civil Construction Contractor"
+]
+
+# Telecommunication & Networking
+telecom_jobs = [
+    "Network Engineer",
+    "Telecom Engineer",
+    "Wireless Communication Specialist",
+    "Fiber Optic Technician"
+]
+
+# Energy & Utilities
+energy_jobs = [
+    "Petroleum Engineer",
+    "Energy Consultant",
+    "Solar Energy Technician",
+    "Power Plant Manager",
+    "Environmental Engineer"
+]
+
+# Aviation & Aerospace
+aviation_jobs = [
+    "Commercial Pilot",
+    "Air Traffic Controller",
+    "Aircraft Maintenance Engineer",
+    "Aerospace Technician"
+]
+
+# Indeed_login(driver)
+i = 0
+# Loop through each job title in the job list and scrape the jobs
+for job_title in it_jobs:
+    print(i)
+    i = i + 1
+    field = "it_jobs"
+    job_scraping(driver, job_title, workbook, field)
+
+time.sleep(10)
+
+# # # Loop through each job title in the job list and scrape the jobs
+# for job_title in healthcare_jobs:
+#
+#     field = "healthcare_jobs"
+#     job_scraping(driver, job_title, workbook, field)
+
+
+# time.sleep(10)
+
+# # # Loop through each job title in the job list and scrape the jobs
+# for job_title in engineering_jobs:
+#     field = "engineering_jobs"
+#     job_scraping(driver, job_title, workbook, field)
+#
+#
+# time.sleep(10)
+#
+# # Loop through each job title in the job list and scrape the jobs
+# for job_title in finance_jobs:
+#     field = "finance_jobs"
+#     job_scraping(driver, job_title, workbook, field)
+#
+#
+# time.sleep(10)
+#
+# # Loop through each job title in the job list and scrape the jobs
+# for job_title in business_jobs:
+#     field = "business_jobs"
+#     job_scraping(driver, job_title, workbook, field)
+#
+#
+# time.sleep(10)
+#
+# # Loop through each job title in the job list and scrape the jobs
+# for job_title in education_jobs:
+#     field = "education_jobs"
+#
+#     job_scraping(driver, job_title, workbook, field)
+#
+#
+# time.sleep(10)
+#
+# # Loop through each job title in the job list and scrape the jobs
+# for job_title in law_jobs:
+#     field = "law_jobs"
+#
+#     job_scraping(driver, job_title, workbook, field)
+#
+#
+# time.sleep(10)
+#
+# # Loop through each job title in the job list and scrape the jobs
+# for job_title in media_jobs:
+#     field = "media_jobs"
+#
+#     job_scraping(driver, job_title, workbook, field)
+#
+#
+# time.sleep(10)
+#
+# # Loop through each job title in the job list and scrape the jobs
+# for job_title in creative_jobs:
+#     field = "creative_jobs"
+#
+#     job_scraping(driver, job_title, workbook, field)
+#
+#
+# time.sleep(10)
+#
+# # Loop through each job title in the job list and scrape the jobs
+# for job_title in hospitality_jobs:
+#     field = "hospitality_jobs"
+#
+#     job_scraping(driver, job_title, workbook, field)
+#
+#
+# time.sleep(10)
+#
+# # Loop through each job title in the job list and scrape the jobs
+# for job_title in government_jobs:
+#     field = "government_jobs"
+#
+#     job_scraping(driver, job_title, workbook, field)
+#
+#
+# time.sleep(10)
+#
+# # Loop through each job title in the job list and scrape the jobs
+# for job_title in agriculture_jobs:
+#     field = "agriculture_jobs"
+#
+#     job_scraping(driver, job_title, workbook, field)
+#
+#
+# time.sleep(10)
+#
+# # Loop through each job title in the job list and scrape the jobs
+# for job_title in social_services_jobs:
+#     field = "social_services_jobs"
+#
+#     job_scraping(driver, job_title, workbook, field)
+#
+#
+# time.sleep(10)
+#
+# # Loop through each job title in the job list and scrape the jobs
+# for job_title in retail_jobs:
+#     field = "retail_jobs"
+#
+#     job_scraping(driver, job_title, workbook, field)
+#
+#
+# time.sleep(10)
+#
+# # Loop through each job title in the job list and scrape the jobs
+# for job_title in entertainment_jobs:
+#     field = "entertainment_jobs"
+#
+#     job_scraping(driver, job_title, workbook, field)
+#
+#
+# time.sleep(10)
+#
+# # Loop through each job title in the job list and scrape the jobs
+# for job_title in freelance_jobs:
+#     field = "freelance_jobs"
+#
+#     job_scraping(driver, job_title, workbook, field)
+#
+#
+# time.sleep(10)
+#
+# # Loop through each job title in the job list and scrape the jobs
+# for job_title in real_estate_jobs:
+#     field = "real_estate_jobs"
+#
+#     job_scraping(driver, job_title, workbook, field)
+#
+#
+# time.sleep(10)
+#
+# for job_title in telecom_jobs:
+#     field = "telecom_jobs"
+#
+#     job_scraping(driver, job_title, workbook, field)
+#
+#
+# time.sleep(10)
+#
+# # Loop through each job title in the job list and scrape the jobs
+# for job_title in energy_jobs:
+#     field = "energy_jobs"
+#
+#     job_scraping(driver, job_title, workbook, field)
+#
+#
+# time.sleep(10)
+#
+# # Loop through each job title in the job list and scrape the jobs
+# for job_title in aviation_jobs:
+#     field = "aviation_jobs"
+#
+#     job_scraping(driver, job_title, workbook, field)
+
+
+# Close the browser
+driver.quit()
+
+# Record the end time
+end_time = time.time()
+
+# Calculate the run time
+run_time = end_time - start_time
+
+# Print the run time in a human-readable format
+print(f"Script runtime: {time.strftime('%H:%M:%S', time.gmtime(run_time))}")
