@@ -1,0 +1,1039 @@
+from selenium import webdriver
+from selenium.webdriver.common.by import By
+from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support import expected_conditions as EC
+import random
+import time
+from collections import defaultdict
+
+
+# Simulating random delays between actions
+def human_delay():
+    time.sleep(random.uniform(2, 5))  # Random sleep between 2 to 5 seconds
+
+
+# Example usage:
+human_delay()  # Add this before/after certain actions
+
+from selenium.webdriver.common.action_chains import ActionChains
+
+import json
+from selenium import webdriver
+from selenium.common import NoSuchElementException
+from selenium.webdriver.common.keys import Keys
+from selenium.webdriver.common.by import By
+import time
+import openpyxl
+import datetime
+
+from selenium.webdriver.support.wait import WebDriverWait
+
+# Record the start time
+start_time = time.time()
+# File name where the number will be stored
+file_name = ".venv/counter.txt"
+
+
+
+# Try to open the file and read the current number
+try:
+    with open(file_name, "r") as file:
+        number = int(file.read())
+except FileNotFoundError:
+    # If the file does not exist, start with 0
+    number = 0
+
+
+# Function to check if a string contains any numbers
+def contains_number(s):
+    return any(char.isdigit() for char in s)
+
+
+# Initialize the WebDriver
+driver = webdriver.Chrome()
+
+
+# Function to open URL for the specified country
+def open_country_url(country, job_title):
+    country_urls = {
+        "United States": f"https://www.indeed.com/q-{job_title}-jobs.html?vjk=bcf4ca23e6b2ef6c",
+        "United Kingdom": "https://uk.indeed.com/",
+        "Canada": "https://ca.indeed.com/",
+        "Australia": "https://au.indeed.com/",
+        "India": "https://in.indeed.com/",
+        "United Arab Emirates": "https://ae.indeed.com/jobs?l=UAE&from=mobRdr&utm_source=%2Fm%2F&utm_medium=redir&utm_campaign=dt&vjk=cb2efc92f151444b",
+        "Singapore": "https://sg.indeed.com/",
+        "Brazil": "https://www.indeed.com/jobs?q=&l=brazil&from=searchOnDesktopSerp&vjk=1fff6a229ed32153",
+        "Netherland": "https://www.indeed.com/q-the-netherlands-jobs.html?vjk=7dc9bc4d31be0020"
+    }
+    if country in country_urls:
+        url = country_urls[country]
+        print(f"Opening: {url}")
+        driver.get(url)
+    else:
+        print(f"No URL found for {country}")
+
+
+# Initialize a new workbook
+workbook = openpyxl.Workbook()
+
+
+def job_list_scraping(country, workbook, job_title, field, sheet, driver):
+    field = field
+    monster_url = "https://www.foundit.in/"
+
+    driver.get()
+
+
+# def job_scraping(driver, job_title, workbook, field):
+#     field = field
+#     page = 1  # Specify the total number of pages to scrape
+#     max_jobs = 520  # Maximum number of jobs to scrape across all locations
+#     max_jobs_per_location = 60  # Maximum number of jobs to scrape per location
+#     total_job_count = 0  # Track total jobs scraped across all locations
+#     jobs_scraped_in_location = 0
+#
+#     # Create a new sheet in the workbook with the job title
+#     sheet = workbook.create_sheet(title=job_title)
+#     # sheet.append(["Job Title", "Company Name", "Location", "Apply Link"])
+#     # Define headers
+#     headers = ["Job Title", "Company Name", "Job Type", "Location", "Experience", "Industry", "Function", "Skills", "Job Description", "Job ID", "Job Added Time", "Job Source"]
+#
+#
+#     # Append headers to the sheet (usually done once at the start)
+#     sheet.append(headers)
+#
+#     all_countries = [
+#         "United States",
+#         "United Kingdom",
+#         "Canada",
+#         "Australia",
+#         "India",
+#         "United Arab Emirates",
+#         "Singapore",
+#         "Brazil",
+#         "Netherland"
+#     ]
+#     # If job title is "Solar Energy Technician", limit to countries starting from UAE
+#     if job_title == "Marine Engineer":
+#         countrys = all_countries[5:]  # Start from "United Arab Emirates"
+#     else:
+#         countrys = all_countries  # Use all countries
+#
+#     job_field_path = "/html/body/section/div[1]/div/div[1]/div/form/div/div[1]/div/div[2]/div/div/input"
+#
+#     job_field = driver.find_element(By.XPATH, job_field_path)
+#     job_field.send_keys(Keys.CONTROL, 'a')
+#     job_field.send_keys(Keys.BACKSPACE)
+#     job_field.send_keys(job_title)
+#     time.sleep(2)
+#
+#     for country in countrys:
+#         location_field_path = "/html/body/section/div[1]/div/div[1]/div/form/div/div[2]/div/div[2]/div/div/input"
+#
+#         location_field = driver.find_element(By.XPATH, location_field_path)
+#         location_field.send_keys(Keys.CONTROL, 'a')
+#         location_field.send_keys(Keys.BACKSPACE)
+#         location_field.send_keys(country)
+#         time.sleep(2)
+#
+#         search_button_path = "/html/body/section/div[1]/div/div[1]/div/form/div/button"
+#
+#         search_button = driver.find_element(By.XPATH, search_button_path)
+#         search_button.click()
+#         time.sleep(2)
+#
+#         try:
+#             # Find all the job card containers
+#             # jobs = driver.find_elements(By.CSS_SELECTOR, '.srpResultCardContainer')
+#             # Get all card containers with the class 'cardContainer'
+#             jobs = driver.find_elements(By.CLASS_NAME, 'cardContainer')
+#             if not jobs:
+#                 print(f"No jobs found on this page for location {country}.")
+#                 break
+#
+#             for job in jobs:
+#                 if total_job_count >= max_jobs or jobs_scraped_in_location >= max_jobs_per_location:
+#                     print(f"Reached job limit for location {country} or total jobs.")
+#                     break  # Stop if either limit is reached
+#
+#                 try:
+#                     # Scroll down to each job posting
+#                     driver.execute_script("arguments[0].scrollIntoView();", job)
+#                     time.sleep(2)
+#
+#                     # Initialize variables to None or default messages
+#                     job_title = company_name = job_type = industry = function = job_description = job_id = job_source = None
+#                     location = experience = job_added_time = None
+#                     skills = []
+#                     skill_list = []
+#
+#                     # Extract job title
+#                     try:
+#                         # Locate the job title and company name using XPath or CSS selectors
+#                         job_title_element = job.find_element(By.CSS_SELECTOR, 'div.jobTitle')
+#                         # Extract the text
+#                         job_title = job_title_element.text
+#                         # job_title.click()
+#                     except Exception as e:
+#                         print(f"Error {e}")
+#                         job_title = "Job Title not available"
+#
+#                     # Extract company name
+#                     try:
+#                         company_name = job.find_element(By.CSS_SELECTOR, '.companyName p').text.strip()
+#                     except Exception as e:
+#                         company_name = "Company Name not available"
+#
+#                     # Extract location
+#                     try:
+#                         job_type = job.find_element(By.CSS_SELECTOR, '.bodyRow .details').text.strip()
+#                     except Exception as e:
+#                         job_type = "Job Type not available"
+#
+#                     # Extract experience
+#                     try:
+#                         location = job.find_elements(By.CSS_SELECTOR, '.bodyRow .details')[1].text.strip()
+#                     except Exception as e:
+#                         location = "Location not available"
+#
+#                     # Extract job type
+#                     try:
+#                         experience = job.find_elements(By.CSS_SELECTOR, '.bodyRow .details')[2].text.strip()
+#                     except Exception as e:
+#                         experience = "Job Type not available"
+#
+#
+#                     # Extract skills
+#                     try:
+#                         skills = job.find_elements(By.CSS_SELECTOR, '.skillTitle')
+#                         skill_list = [skill.text.strip() for skill in skills]
+#                     except Exception as e:
+#                         # try:
+#                         #     skill = job.find_elements(By.CSS_SELECTOR, '.bodyRow .details')[3]
+#                         #     skill_list = [skill.text.strip() for skill in skills]
+#                         # except:
+#                         skill_list = ["Skills not available"]
+#
+#
+#                     # # Use JavaScript to click the job card
+#                     driver.execute_script("arguments[0].click();", job)
+#
+#
+#
+#
+#                     # Extract job added time
+#                     try:
+#                         job_added_time = driver.find_element(By.CSS_SELECTOR,
+#                                                              '.jobAnalytics .btnHighighlights i.mqfisrp-time').text.strip()
+#                     except Exception as e:
+#                         job_added_time = "Job added time not available"
+#
+#
+#
+#                     # Extract industry
+#                     try:
+#                         industry = driver.find_element(By.XPATH,
+#                                                        '//p[text()="Industry"]/following-sibling::div').text.strip()
+#                     except Exception as e:
+#                         industry = "Industry not available"
+#
+#                     # Extract function
+#                     try:
+#                         function = driver.find_element(By.XPATH,
+#                                                        '//p[text()="Function"]/following-sibling::div').text.strip()
+#                     except Exception as e:
+#                         function = "Function not available"
+#
+#
+#
+#                     # Extract job description
+#                     try:
+#                         job_description = driver.find_element(By.CSS_SELECTOR,
+#                                                               '.jobDescription .jobDescInfo').text.strip()
+#                     except Exception as e:
+#                         job_description = "Job Description not available"
+#
+#                     # Extract job ID
+#                     try:
+#                         job_id = driver.find_element(By.CSS_SELECTOR, '.jobIdInfo').text.split(":")[1].strip()
+#                     except Exception as e:
+#                         job_id = "Job ID not available"
+#
+#                     # Extract job source
+#                     try:
+#                         job_source = driver.find_element(By.CSS_SELECTOR, '.companySource a').get_attribute(
+#                             'href').strip()
+#                     except Exception as e:
+#                         job_source = "Job source not available"
+#
+#                     # Now append the extracted details to the sheet
+#                     sheet.append([
+#                         job_title,
+#                         company_name,
+#                         location,
+#                         experience,
+#                         job_type,
+#                         industry,
+#                         function,
+#                         ', '.join(skill_list),  # Convert skill list to a comma-separated string
+#                         job_description,
+#                         job_id,
+#                         job_added_time,
+#                         job_source
+#                     ])
+#
+#                     # Print the scraped data for verification
+#                     # Output the extracted details
+#                     print("Job Title:", job_title)
+#                     print("Company Name:", company_name)
+#                     print("Location:", location)
+#                     print("Experience Required:", experience)
+#                     print("Skills:", ', '.join(skill_list))
+#                     print("Job Posted Time:", job_added_time)
+#                     # Output the extracted details
+#
+#                     print("Job Type:", job_type)
+#                     print("Industry:", industry)
+#                     print("Function:", function)
+#
+#                     print("Job Description:", job_description)
+#                     print("Job ID:", job_id)
+#
+#                     print("Job Source:", job_source)
+#
+#                     # Save the workbook after processing all jobs
+#                     workbook.save(f"{field}.xlsx")
+#
+#                     # Update counters
+#                     total_job_count += 1
+#                     jobs_scraped_in_location += 1
+#
+#                     if total_job_count >= max_jobs:
+#                         print("Reached the maximum number of jobs to scrape.")
+#                         break  # Stop scraping if the total job limit is reached
+#
+#                 except Exception as e:
+#                     print(f"Error processing job in {country}. Error: {e}")
+#                     continue
+#
+#                 except Exception as e:
+#                     continue
+#             print("Final File Saved")
+#             # Save the workbook after processing all jobs
+#             workbook.save(f"{field}.xlsx")
+#             try:
+#                 # Check if the right arrow is clickable (not disabled)
+#                 next_button = driver.find_element(By.CSS_SELECTOR, '.arrow-right i.mqfisrp-right-arrow')
+#                 if 'disabled' not in next_button.get_attribute('class'):
+#                     next_button.click()  # Click on the next page button
+#                     time.sleep(2)  # Wait for the page to load
+#                 else:
+#                     print("No more pages")
+#                     break
+#             except Exception as e:
+#                 print("Error occurred:", e)
+#                 break
+from selenium import webdriver
+from selenium.webdriver.common.by import By
+from selenium.webdriver.common.keys import Keys
+import time
+
+
+
+
+def job_scraping(driver, job_title, workbook, field):
+
+    field = field
+    pages = 10
+    max_jobs = 520  # Maximum number of jobs to scrape across all locations
+    max_jobs_per_location = 60  # Maximum number of jobs to scrape per location
+    total_job_count = 0  # Track total jobs scraped across all locations
+    jobs_scraped_in_location = 0
+
+    # Create a new sheet in the workbook with the job title
+    sheet = workbook.create_sheet(title=job_title)
+
+    # Define headers
+    headers = [
+        "Job Title", "Company Name", "Location", "Experience", "Job Type",
+        # "Industry",
+        # "Function",
+        "Skills", "Job Description", "Job ID",
+        # "Job Added Time",
+        "Job Source"
+    ]
+    # Append headers to the sheet
+    sheet.append(headers)
+
+    all_countries = [
+        "United States", "United Kingdom", "Canada", "Australia", "India",
+        "United Arab Emirates", "Singapore", "Brazil", "Netherlands"
+    ]
+
+    # If job title is "Marine Engineer", limit to countries starting from UAE
+    if job_title == "Chemical Engineer":
+        countries = all_countries[3:]  # Start from "United Arab Emirates"
+    else:
+        countries = all_countries  # Use all countries
+
+    job_field_path = "/html/body/header/div[3]/div[2]/div/div/div/div/div[2]/div/form/div/div[1]/div/div[1]/div/div/input"
+    job_field = driver.find_element(By.XPATH, job_field_path)
+    job_field.send_keys(Keys.CONTROL, 'a')
+    job_field.send_keys(Keys.BACKSPACE)
+    job_field.send_keys(job_title)
+    time.sleep(2)
+
+    for country in countries:
+
+        jobs_scraped_in_location = 0
+
+        location_field_path = "/html/body/header/div[3]/div[2]/div/div/div/div/div[2]/div/form/div/div[2]/div/div[1]/div/div/input"
+        location_field = driver.find_element(By.XPATH, location_field_path)
+        location_field.send_keys(Keys.CONTROL, 'a')
+        location_field.send_keys(Keys.BACKSPACE)
+        location_field.send_keys(country)
+        time.sleep(2)
+
+        search_button_path = "/html/body/header/div[3]/div[2]/div/div/div/div/div[2]/div/form/div/button"
+        search_button = driver.find_element(By.XPATH, search_button_path)
+        search_button.click()
+        time.sleep(2)
+        page_checker = False
+
+        for page in range(pages):
+            if page_checker:
+                break
+            try:
+                # Get all card containers with the class 'cardContainer'
+                jobs = driver.find_elements(By.CLASS_NAME, 'cardContainer')
+                if not jobs:
+                    print(f"No jobs found on this page for location {country}.")
+                    break
+
+                for job in jobs:
+                    if total_job_count >= max_jobs or jobs_scraped_in_location >= max_jobs_per_location:
+                        print(f"Reached job limit for location {country} or total jobs.")
+                        page_checker = True
+                        break
+
+                    try:
+                        # Scroll down to each job posting
+                        driver.execute_script("arguments[0].scrollIntoView();", job)
+                        time.sleep(2)
+
+                        # Initialize variables
+                        job_title = company_name = job_type = industry = function = job_description = job_id = job_source = None
+                        location = experience = job_added_time = None
+                        skills = []
+                        skill_list = []
+
+                        # Extract job title
+                        try:
+                            job_title_element = job.find_element(By.CSS_SELECTOR, 'div.jobTitle')
+                            job_title = job_title_element.text
+                        except Exception as e:
+                            job_title = "Job Title not available"
+
+                        # Extract company name
+                        try:
+                            company_name = job.find_element(By.CSS_SELECTOR, '.companyName p').text.strip()
+                        except Exception as e:
+                            company_name = "Company Name not available"
+
+                        # Extract job type
+                        try:
+                            job_type = job.find_element(By.CSS_SELECTOR, '.bodyRow .details').text.strip()
+                        except Exception as e:
+                            job_type = "Job Type not available"
+
+                        # Extract location
+                        try:
+                            location = job.find_elements(By.CSS_SELECTOR, '.bodyRow .details')[1].text.strip()
+                        except Exception as e:
+                            location = "Location not available"
+
+                        # Extract experience
+                        try:
+                            experience = job.find_elements(By.CSS_SELECTOR, '.bodyRow .details')[2].text.strip()
+                        except Exception as e:
+                            experience = "Experience not available"
+
+                        # Extract skills
+                        try:
+                            skills = job.find_elements(By.CSS_SELECTOR, '.skillTitle')
+                            skill_list = [skill.text.strip() for skill in skills]
+                        except Exception as e:
+                            skill_list = ["Skills not available"]
+
+                        # Use JavaScript to click the job card
+                        driver.execute_script("arguments[0].click();", job)
+
+                        # Extract job added time
+                        try:
+                            job_added_time = driver.find_element(By.CSS_SELECTOR,
+                                                                 '.jobAnalytics .btnHighighlights i.mqfisrp-time').text.strip()
+                        except Exception as e:
+                            job_added_time = "Job added time not available"
+
+                        # Extract industry
+                        try:
+                            industry = driver.find_element(By.XPATH,
+                                                           '//p[text()="Industry"]/following-sibling::div').text.strip()
+                        except Exception as e:
+                            industry = "Industry not available"
+
+                        # Extract function
+                        try:
+                            function = driver.find_element(By.XPATH,
+                                                           '//p[text()="Function"]/following-sibling::div').text.strip()
+                        except Exception as e:
+                            function = "Function not available"
+
+                        # Extract job description
+                        try:
+                            job_description = driver.find_element(By.CSS_SELECTOR,
+                                                                  '.jobDescription .jobDescInfo').text.strip()
+                        except Exception as e:
+                            job_description = "Job Description not available"
+
+                        # Extract job ID
+                        try:
+                            job_id = driver.find_element(By.CSS_SELECTOR, '.jobIdInfo').text.split(":")[1].strip()
+                        except Exception as e:
+                            job_id = "Job ID not available"
+
+                        # Extract job source
+                        try:
+                            job_source = driver.find_element(By.CSS_SELECTOR, '.companySource a').get_attribute('href').strip()
+                        except Exception as e:
+                            job_source = "Job source not available"
+
+                        # Append the extracted details to the sheet
+                        sheet.append([
+                            job_title, company_name, location, experience, job_type,
+                            # industry, function,
+                            ', '.join(skill_list), job_description,
+                            job_id,
+                            # job_added_time,
+                            job_source
+                        ])
+
+                        # Print the scraped data for verification
+                        print("Job Title:", job_title)
+                        print("Company Name:", company_name)
+                        print("Location:", location)
+                        print("Experience Required:", experience)
+                        print("Skills:", ', '.join(skill_list))
+                        print("Job Posted Time:", job_added_time)
+                        print("Job Type:", job_type)
+                        print("Industry:", industry)
+                        print("Function:", function)
+                        print("Job Description:", job_description)
+                        print("Job ID:", job_id)
+                        print("Job Source:", job_source)
+
+                        # Save the workbook after processing each job
+                        workbook.save(f"{field}.xlsx")
+
+                        # Update counters
+                        total_job_count += 1
+                        jobs_scraped_in_location += 1
+
+                        print(f"Total Job Count : {total_job_count}, Jobs scraped in location : {jobs_scraped_in_location}")
+
+                        if total_job_count >= max_jobs:
+                            print("Reached the maximum number of jobs to scrape.")
+                            break
+
+                    except Exception as e:
+                        print(f"Error processing job in {country}: {e}")
+                        continue
+
+                # Pagination: Check and click the next page button if available
+                try:
+                    # Wait for the next page button to be clickable
+                    next_button = WebDriverWait(driver, 10).until(
+                        EC.element_to_be_clickable((By.CSS_SELECTOR, "div.arrow.arrow-right"))
+                    )
+                    next_button.click()  # Click the next page button
+                    time.sleep(2)  # Pause to allow the page to load
+
+                except Exception as e:
+                    print(f"Error occurred while navigating to the next page: {e}")
+                    break
+
+            except Exception as e:
+                print(f"Error occurred for location {country}: {e}")
+                break
+
+
+
+
+# Information Technology (IT) & Software Development
+it_jobs = [
+    "Software Engineer",
+    "Data Scientist",
+    "Machine Learning",
+    "AI Specialist",
+    "Blockchain Developer",
+    "Cloud Architect",
+    "Cybersecurity Analyst",
+    "UI/UX Designer",
+    "DevOps Engineer",
+    "Full-Stack Developer",
+    "Web Developer",
+    "Mobile App Developer"
+]
+
+# Healthcare & Medicine
+healthcare_jobs = [
+    "General Practitioner",
+    "Surgeon",
+    "Cardiologist",
+    "Dentist",
+    "Nurse",
+    "Medical Laboratory",
+    "Pharmacist",
+    "Physiotherapist",
+    "Medical Researcher",
+    "Radiologist",
+    "Nutritionist",
+    "Psychologist",
+    "Occupational Therapist"
+]
+
+# Engineering & Manufacturing
+# engineering_jobs = [
+#     "Mechanical Engineer",
+#     "Civil Engineer",
+#     "Electrical Engineer",
+#     "Electronics Telecommunication",
+#     "Aerospace Engineer",
+#     "Chemical Engineer",
+#     "Industrial Engineer",
+#     "Marine Engineer",
+#     "Automotive Engineer",
+#     "Biomedical Engineer"
+# ]
+
+# Finance & Banking
+finance_jobs = [
+    "Financial Analyst",
+    "Chartered Accountant",
+    "Investment Banker",
+    "Financial Planner",
+    "Portfolio Manager",
+    "Risk Analyst",
+    "Auditor",
+    "Tax Consultant",
+    "Actuary",
+    "Stockbroker"
+]
+
+# Business & Management
+business_jobs = [
+    "Business Analyst",
+    "Marketing Manager",
+    "Human Resources Manager",
+    "Operations Manager",
+    "Project Manager",
+    "Product Manager",
+    "Entrepreneur",
+    "Consultant",
+    "Supply Chain Manager",
+    "Sales Manager"
+]
+
+# Education & Research
+education_jobs = [
+    "Professor",
+    "Lecturer",
+    "School Teacher",
+    "Research Scientist",
+    "Educational Counselor",
+    "Instructional Designer",
+    "Librarian",
+    "Curriculum Developer"
+]
+
+# Law & Legal Services
+law_jobs = [
+    "Corporate Lawyer",
+    "Criminal Lawyer",
+    "Civil Lawyer",
+    "Legal Advisor",
+    "Legal Researcher",
+    "Paralegal",
+    "Judge",
+    "Notary"
+]
+
+# Media, Journalism & Communication
+media_jobs = [
+    "Journalist",
+    "News Anchor",
+    "Editor",
+    "Copywriter",
+    "Public Relations Manager",
+    "Digital Marketing",
+    "Social Media Manager",
+    "Advertising Executive",
+    "Content Creator"
+]
+
+# Creative Arts & Design
+creative_jobs = [
+    "Graphic Designer",
+    "Interior Designer",
+    "Fashion Designer",
+    "Fine Artist",
+    "Photographer",
+    "Animator",
+    "Film Director",
+    "Scriptwriter",
+    "Sound Engineer",
+    "Actor",
+    "Actress"
+]
+
+# Hospitality & Tourism
+hospitality_jobs = [
+    "Hotel Manager",
+    "Chef",
+    "Travel Agent",
+    "Tour Guide",
+    "Event Planner",
+    "Airline Steward",
+    "Stewardess",
+    "Travel Blogger",
+    "Restaurant Manager"
+]
+
+# Government Services & Public Sector
+# government_jobs = [
+#     "IAS Officer",
+#     "IPS Officer",
+#     "IFS Officer",
+#     "Government Clerk",
+#     "Railway Officer",
+#     "Defense Personnel",
+#     "Public Sector Bank",
+#     "Scientist"
+# ]
+
+# # Agriculture & Environmental Science
+# agriculture_jobs = [
+#     "Agricultural Scientist",
+#     "Environmental Consultant",
+#     "Wildlife Conservationist",
+#     "Horticulturist",
+#     "Veterinary Doctor",
+#     "Agronomist",
+#     "Soil Scientist"
+# ]
+
+# Social Services & NGOs
+# social_services_jobs = [
+#     "Social Worker",
+#     "NGO Program Manager",
+#     "Human Rights Advocate",
+#     "Community Developmentr",
+#     "Public Health Educator",
+#     "Disaster Management"
+# ]
+
+# Retail & E-commerce
+# retail_jobs = [
+#     "Retail Store Manager",
+#     "E-commerce Specialist",
+#     "Customer Service",
+#     "Merchandising Manager",
+#     "Supply Chain Analyst"
+# ]
+
+# Entertainment & Sports
+# entertainment_jobs = [
+#     "Professional Athlete",
+#     "Sports Coach",
+#     "Fitness Trainer",
+#     "Sports Analyst",
+#     "Choreographer",
+#     "Musician",
+#     "Film Editor",
+#     "Television Producer"
+# ]
+
+# Freelance & Gig Economy
+# freelance_jobs = [
+#     "Freelance Writer",
+#     "Graphic Designer",
+#     "Virtual Assistant",
+#     "Independent Consultant",
+#     "Content Creator",
+#     "Photographer",
+#     "Videographer"
+# ]
+
+# Real Estate & Property Management
+# real_estate_jobs = [
+#     "Real Estate Agent",
+#     "Property Manager",
+#     "Architect",
+#     "Urban Planner",
+#     "Civil Construction Contractor"
+# ]
+
+# Telecommunication & Networking
+# telecom_jobs = [
+#     "Network Engineer",
+#     "Telecom Engineer",
+#     "Wireless Communication Specialist",
+#     "Fiber Optic Technician"
+# ]
+
+# Energy & Utilities
+# energy_jobs = [
+#     "Petroleum Engineer",
+#     "Energy Consultant",
+#     "Solar Energy Technician",
+#     "Power Plant Manager",
+#     "Environmental Engineer"
+# ]
+
+# Aviation & Aerospace
+# aviation_jobs = [
+#     "Commercial Pilot",
+#     "Air Traffic Controller",
+#     "Aircraft Maintenance Engineer",
+#     "Aerospace Technician"
+# ]
+
+# Indeed_login(driver)
+i = 0
+# Loop through each job title in the job list and scrape the jobs
+# for job_title in it_jobs:
+#     print(i)
+#     i = i + 1
+#     field = "it_jobs"
+#     job_scraping(driver, job_title, workbook, field)
+
+# time.sleep(10)
+
+# # # Loop through each job title in the job list and scrape the jobs
+# for job_title in healthcare_jobs:
+#
+#     field = "healthcare_jobs"
+#     job_scraping(driver, job_title, workbook, field)
+
+
+# time.sleep(10)
+#
+# # # Loop through each job title in the job list and scrape the jobs
+monster_url = "https://www.foundit.in/"
+
+driver.get(monster_url)
+job_o_path = "/html/body/section/div[1]/div/div[1]/div/form/div/div[1]/div/div[2]/div/div/input"
+job_o = driver.find_element(By.XPATH, job_o_path)
+job_o.send_keys(Keys.CONTROL, 'a')
+job_o.send_keys(Keys.BACKSPACE)
+job_o.send_keys("developer")
+time.sleep(2)
+location_o_path = "/html/body/section/div[1]/div/div[1]/div/form/div/div[2]/div/div[2]/div/div/input"
+location_o = driver.find_element(By.XPATH, location_o_path)
+location_o.send_keys(Keys.CONTROL, 'a')
+location_o.send_keys(Keys.BACKSPACE)
+location_o.send_keys("United States")
+time.sleep(2)
+
+search_button_o_path = "/html/body/section/div[1]/div/div[1]/div/form/div/button"
+search_button_o = driver.find_element(By.XPATH, search_button_o_path)
+search_button_o.click()
+time.sleep(2)
+for job_title in hospitality_jobs:
+    field = "hospitality_jobs"
+    print("I am in the main for loop in the Function")
+    job_scraping(driver, job_title, workbook, field)
+
+time.sleep(10)
+#
+# # Loop through each job title in the job list and scrape the jobs
+for job_title in creative_jobs:
+    field = "creative_jobs"
+    job_scraping(driver, job_title, workbook, field)
+
+
+time.sleep(10)
+#
+# # Loop through each job title in the job list and scrape the jobs
+for job_title in media_jobs:
+    field = "media_jobs"
+    job_scraping(driver, job_title, workbook, field)
+
+for job_title in law_jobs:
+    field = "law_jobs"
+    print("I am in the main for loop in the Function")
+    job_scraping(driver, job_title, workbook, field)
+
+time.sleep(10)
+#
+# # Loop through each job title in the job list and scrape the jobs
+for job_title in education_jobs:
+    field = "education_jobs"
+    job_scraping(driver, job_title, workbook, field)
+
+
+time.sleep(10)
+#
+# # Loop through each job title in the job list and scrape the jobs
+for job_title in business_jobs:
+    field = "business_jobs"
+    job_scraping(driver, job_title, workbook, field)
+
+
+time.sleep(10)
+#
+# # Loop through each job title in the job list and scrape the jobs
+for job_title in it_jobs:
+    field = "it_jobs"
+    print("I am in main for loop in the function")
+
+    job_scraping(driver, job_title, workbook, field)
+
+
+time.sleep(10)
+#
+# # Loop through each job title in the job list and scrape the jobs
+for job_title in finance_jobs:
+    field = "finance_jobs"
+
+    job_scraping(driver, job_title, workbook, field)
+
+
+# time.sleep(10)
+#
+# # Loop through each job title in the job list and scrape the jobs
+for job_title in healthcare_jobs:
+    field = "healthcare_jobs"
+
+    job_scraping(driver, job_title, workbook, field)
+
+#
+# time.sleep(10)
+#
+# # Loop through each job title in the job list and scrape the jobs
+# for job_title in creative_jobs:
+#     field = "creative_jobs"
+#
+#     job_scraping(driver, job_title, workbook, field)
+#
+#
+# time.sleep(10)
+#
+# # Loop through each job title in the job list and scrape the jobs
+# for job_title in hospitality_jobs:
+#     field = "hospitality_jobs"
+#
+#     job_scraping(driver, job_title, workbook, field)
+#
+#
+# time.sleep(10)
+#
+# # Loop through each job title in the job list and scrape the jobs
+# for job_title in government_jobs:
+#     field = "government_jobs"
+#
+#     job_scraping(driver, job_title, workbook, field)
+#
+#
+# time.sleep(10)
+#
+# # Loop through each job title in the job list and scrape the jobs
+# for job_title in agriculture_jobs:
+#     field = "agriculture_jobs"
+#
+#     job_scraping(driver, job_title, workbook, field)
+#
+#
+# time.sleep(10)
+#
+# # Loop through each job title in the job list and scrape the jobs
+# for job_title in social_services_jobs:
+#     field = "social_services_jobs"
+#
+#     job_scraping(driver, job_title, workbook, field)
+#
+#
+# time.sleep(10)
+#
+# # Loop through each job title in the job list and scrape the jobs
+# for job_title in retail_jobs:
+#     field = "retail_jobs"
+#
+#     job_scraping(driver, job_title, workbook, field)
+#
+#
+# time.sleep(10)
+#
+# # Loop through each job title in the job list and scrape the jobs
+# for job_title in entertainment_jobs:
+#     field = "entertainment_jobs"
+#
+#     job_scraping(driver, job_title, workbook, field)
+#
+#
+# time.sleep(10)
+#
+# # Loop through each job title in the job list and scrape the jobs
+# for job_title in freelance_jobs:
+#     field = "freelance_jobs"
+#
+#     job_scraping(driver, job_title, workbook, field)
+#
+#
+# time.sleep(10)
+#
+# # Loop through each job title in the job list and scrape the jobs
+# for job_title in real_estate_jobs:
+#     field = "real_estate_jobs"
+#
+#     job_scraping(driver, job_title, workbook, field)
+#
+#
+# time.sleep(10)
+#
+# for job_title in telecom_jobs:
+#     field = "telecom_jobs"
+#
+#     job_scraping(driver, job_title, workbook, field)
+#
+#
+# time.sleep(10)
+#
+# # Loop through each job title in the job list and scrape the jobs
+# for job_title in energy_jobs:
+#     field = "energy_jobs"
+#
+#     job_scraping(driver, job_title, workbook, field)
+#
+#
+# time.sleep(10)
+#
+# # Loop through each job title in the job list and scrape the jobs
+# for job_title in aviation_jobs:
+#     field = "aviation_jobs"
+#
+#     job_scraping(driver, job_title, workbook, field)
+
+
+# Close the browser
+driver.quit()
+
+# Record the end time
+end_time = time.time()
+
+# Calculate the run time
+run_time = end_time - start_time
+
+# Print the run time in a human-readable format
+print(f"Script runtime: {time.strftime('%H:%M:%S', time.gmtime(run_time))}")
